@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вышивальное лото — прототип</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#2a1c18;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#f3ece4;display:flex;justify-content:center}
+.li{display:grid;grid-template-columns:24px 1fr;column-gap:6px;align-items:start;margin:3px 0}
+.li>span:first-child{text-align:center}
+.app{width:100%;max-width:440px;min-height:100vh;background:#3b2622;display:flex;flex-direction:column}
+.screen{flex:1;padding:14px 14px 120px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{background:none;border:none;color:#f3ece4;font-size:22px;cursor:pointer;padding:0 6px}
+h1{font-size:19px;margin:0;font-weight:bold}
+h2{font-size:15px;margin:18px 0 8px}
+.btn{background:#9b1c1c;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:bold;cursor:pointer}
+.btn.green{background:#3f9b4a}.btn.gray{background:#5a4540}.btn.small{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:rgba(0,0,0,.28);border-radius:12px;padding:12px;margin-bottom:10px}
+.paper{background:#fbf7ee;color:#2b211d;border-radius:12px;padding:14px;margin-bottom:10px;line-height:1.45;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{background:rgba(0,0,0,.35);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px;margin-top:2px;line-height:1.2}
+.stat span{font-size:12px;color:#cdbfb4}
+.navs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.muted{color:#cdbfb4;font-size:13px}
+.balls{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.ball{width:34px;height:34px;border-radius:50%;background:#f0d9a8;color:#5a3a12;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid #c99a3c}
+.head{background:#9b1c1c;border-radius:12px;padding:12px;display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.head .k{font-size:12px;color:#f3c9c9}.head .v{font-size:17px;font-weight:bold;margin-bottom:6px}
+.mail{position:relative;background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
+.badge{position:absolute;top:-4px;right:-8px;background:#f0b429;color:#3b2622;border-radius:10px;font-size:11px;padding:1px 6px;font-weight:bold}
+.bar{height:14px;background:rgba(0,0,0,.4);border-radius:8px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:#c0392b}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:rgba(255,255,255,.08);border:1px solid #9b1c1c;border-radius:12px;padding:12px;min-height:118px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
+.tile.burned{background:rgba(255,255,255,.04);border-color:#5a4540;color:#8d7f78;cursor:not-allowed}
+.tile.add{border-style:dashed;cursor:default}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:2px 6px;margin:2px 2px 0 0;font-weight:bold}
+.t-due{background:#f0d9a8;color:#5a3a12}.t-debt{background:#f5b7b1;color:#78201a}.t-rev{background:#bcd6f2;color:#123d66}.t-rej{background:#f5b7b1;color:#78201a}
+.grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;background:#fbf7ee;padding:6px;border-radius:10px}
+.c{aspect-ratio:1/1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;background:#fff;color:#2b211d;border:1px solid #d9cfc4;position:relative}
+.c.e{background:#eee6da;border-color:#eee6da}
+.c.d{background:#f6d58b;border-color:#c99a3c}
+.c.debt{background:#f5b7b1;border-color:#c0392b}
+.c.r{background:#bcd6f2;border-color:#4a86c5}
+.c.x{background:#cfe9d6;border-color:#3f9b4a;color:#1d5a2a}
+.c.x::after{content:"";position:absolute;inset:12%;border-radius:50%;background:rgba(63,155,74,.55)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#cdbfb4;margin-top:8px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+input[type=text],input[type=number],textarea{width:100%;padding:9px;border-radius:8px;border:1px solid #6b5550;background:#2a1c18;color:#f3ece4;font-size:14px}
+textarea{min-height:60px}
+.row{display:flex;gap:8px;align-items:center}
+.err{color:#ff9b8f;font-size:13px;margin-top:6px;min-height:16px}
+.ok{color:#9fe0a9;font-size:13px}
+.photo{width:92px;height:92px;border-radius:8px;object-fit:cover;background:#2a1c18;border:1px solid #6b5550}
+.chk{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.06);margin-bottom:6px;cursor:pointer}
+.hist{display:flex;gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding:10px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}
+.demo{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:#15100e;border-top:2px solid #f0b429;padding:8px 10px;font-size:12px}
+.demo .row{justify-content:space-between;flex-wrap:wrap;gap:6px}
+.seg button{background:#3b2622;color:#f3ece4;border:1px solid #6b5550;padding:5px 9px;font-size:12px;cursor:pointer}
+.seg button.on{background:#f0b429;color:#2a1c18;font-weight:bold}
+.rules h2{font-size:16px;color:#9b1c1c;margin:18px 0 6px}.rules h3{font-size:14px;margin:12px 0 4px}.rules a{color:#9b1c1c}.rules ul,.rules ol{padding-left:20px;margin:6px 0}.rules table{font-size:13px;margin:6px 0}.rules td{border-bottom:1px solid #e6dccf;padding:4px}
+.win{background:#f0b429;color:#2a1c18;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="app"><div class="screen" id="screen"></div></div>
+<div class="demo" id="demo"></div>
+<script>
+const DAYS=['вторник','среда','четверг','пятница','суббота','воскресенье','понедельник'];
+const DS=['Вт','Ср','Чт','Пт','Сб','Вс','Пн'];
+const ALPH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const RANGES=[[1,9]].concat([1,2,3,4,5,6,7].map(i=>[i*10,i*10+9])).concat([[80,90]]);
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+function genGrid(){
+ let rows,cnt;
+ do{rows=[0,1,2].map(()=>shuffle([0,1,2,3,4,5,6,7,8]).slice(0,5));cnt=[...Array(9)].map((_,c)=>rows.filter(r=>r.includes(c)).length)}while(Math.min(...cnt)<1);
+ const g=[0,1,2].map(()=>Array(9).fill(null));
+ for(let c=0;c<9;c++){const [a,b]=RANGES[c];const pool=shuffle([...Array(b-a+1)].map((_,i)=>a+i)).slice(0,cnt[c]).sort((x,y)=>x-y);let k=0;for(let r=0;r<3;r++)if(rows[r].includes(c))g[r][c]=pool[k++]}
+ return g;
+}
+function genKey(used){let c;do{c=[...Array(8)].map(()=>ALPH[rnd(ALPH.length)]).join('')}while(used.has(c));used.add(c);return c}
+function genCode(used){let c;do{c=[...Array(6)].map(()=>ALPH[rnd(ALPH.length)]).join('')}while(used.has(c));used.add(c);return c}
+
+let S, nav=[], prof='me', ui={}, labTab='pending', labSec='reports';
+const MY=()=>S.profiles[prof].my;
+const ALLMY=()=>S.profiles.me.my.concat(S.profiles.helper.my);
+const staff=()=>{const c=S.profiles[prof].key;return c?S.keys.find(k=>k.code===c&&k.active):null};
+const canActivate=()=>S.week===0||(S.week===1&&S.day===0);
+const myMail=()=>S.mail.filter(m=>MY().includes(m.t));
+function newTicket(n,used){const g=genGrid();return{n,code:genCode(used),grid:g,nums:g.flat().filter(x=>x),closed:new Set(),pending:new Set(),debt:new Set(),fix:null,fixSentWeek:-1,active:false,burned:false,burnedWeek:0,stitched:0}}
+function reset(pre=2){let k=0;do{build(pre)}while(pre>0&&k++<30&&!(owed(T(37)).length&&owed(T(52)).length));S.mail.forEach(m=>m.read=true);prof='me';nav=[{s:'home'}];render()}
+function build(pre){
+ const used=new Set();
+ S={week:0,day:0,drawn:[],draws:[],tickets:[],profiles:{me:{my:[],key:null},helper:{my:[],key:null}},keys:[],reports:[],mail:[],seq:0,winner:null,over:false,wk:{},norm:200,prizes:['Брелок-сыч','Органайзер-сыч для иголок и ножниц'],season:'Зима-2026',startDate:'2026-12-08',posted:[],sched:[{off:-7,text:'🎉 Сезон «{сезон}» открыт! Внесите свои билеты в разделе «Моя комната». Код можно ввести до вторника 23:59 по МСК — дня первого розыгрыша. Потом приём закрывается.'},{off:-1,text:'❄️ Скоро старт! Проверьте, что все ваши билеты на месте в «Моей комнате». Первые бочонки достанем из мешочка во вторник в 00:00 по МСК.'},{off:0,text:'🎉 Мешочек открыт, первые бочонки вытянуты! Загляните в свои билеты: совпадения подсвечены. ⚠️ Последний шанс ввести код билета — сегодня до 23:59.'},
+ {off:21,text:'✨ Игра набирает обороты: уже выпало 24 бочонка из 90!'},
+ {off:35,text:'🏁 Половина пути позади! Выпало почти 40 бочонков. У кого-то закрыта уже треть билета. Держим темп!'},
+ {off:42,text:'💪 Вышито уже больше {тыс} крестиков всеми вместе! Спасибо, что вы с нами.'},
+ {off:56,text:'🔥 Напряжение растёт! Некоторые билеты совсем близко к финишу. Каждый новый бочонок может стать последним.'},
+ {off:70,text:'⏳ Финал близко! Не копите долги: при двойном пропуске подряд билет сгорает, и обидно потерять его в шаге от победы.'}]};
+ for(let i=1;i<=100;i++)S.tickets.push(newTicket(i,used));
+ const kc=new Set(S.tickets.map(t=>t.code));
+ S.keys.push({code:genKey(kc),label:'Владелец',role:'owner',active:true});
+ if(pre){S.profiles.me.my=[37,52,12]}
+ shuffle(S.tickets.map(t=>t.n).filter(n=>![37,52,12].includes(n))).slice(0,68).concat(S.profiles.me.my).forEach(n=>T(n).active=true);
+ if(pre>=0)doDraw();
+ for(let w=0;w<pre;w++){
+  S.tickets.forEach(t=>{if(t.burned)return;if(MY().includes(t.n)&&t.n!==12){owed(t).forEach(x=>{t.closed.add(x);t.debt.delete(x);addSt(t,S.week,S.norm)})}});
+  if(w===0){const t12=T(12);}
+  deadline(true);doDraw();
+ }
+ if(pre){const t12=T(12);if(!t12.burned){t12.burned=true;t12.burnedWeek=2;S.mail.push({t:12,w:2,text:'Билет № 12 сгорел: два пропуска подряд.',read:true})}}
+}
+const T=n=>S.tickets.find(t=>t.n===n);
+const addSt=(t,w,n)=>{t.stitched+=n;const k=S.wk[w]||(S.wk[w]={all:0,by:{}});k.all+=n;k.by[t.n]=(k.by[t.n]||0)+n};
+const simDay=()=>(S.week-1)*7+S.day;
+const dateAt=off=>{const d=new Date(S.startDate+'T00:00:00');d.setDate(d.getDate()+off);return d};
+const fmt=d=>d.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+const lastDraw=()=>S.draws[S.draws.length-1]||[];
+const post=text=>S.posted.push({day:simDay(),text,seq:++S.seq});
+const subst=t=>t.replace(/\{сезон\}/g,S.season).replace(/\{тыс\}/g,(()=>{const n=Math.floor(totalStitched()/1000);return n+(n%10===1&&n%100!==11?' тысячи':' тысяч')})());
+const freeze=()=>S.sched.forEach(a=>{if(a.off<=simDay()&&!a.frozen)a.frozen=subst(a.text)});
+const board=()=>S.sched.filter(a=>a.off<=simDay()).map(a=>({day:a.off,text:a.frozen||subst(a.text)})).concat(S.posted).sort((a,b)=>b.day-a.day||(b.seq||0)-(a.seq||0)).slice(0,1);
+const matched=t=>t.nums.filter(x=>S.drawn.includes(x));
+const owed=t=>matched(t).filter(x=>!t.closed.has(x)&&!t.pending.has(x));
+const cost=(t,x)=>t.debt.has(x)?S.norm*2:S.norm;
+function doDraw(){
+ const left=[...Array(90)].map((_,i)=>i+1).filter(x=>!S.drawn.includes(x));
+ if(!left.length)return;
+ const d=shuffle(left).slice(0,6).sort((a,b)=>a-b);
+ S.drawn.push(...d);S.draws.push(d);S.week++;S.day=0;
+}
+function deadline(silent){
+ S.tickets.forEach(t=>{
+  if(t.burned||!t.active)return;
+  const mine=ALLMY().includes(t.n);
+  if(!mine&&!silent){owed(t).forEach(x=>{if(Math.random()<0.93){const c=cost(t,x);t.closed.add(x);t.debt.delete(x);addSt(t,S.week,c)}})}
+  if(!mine&&silent){owed(t).forEach(x=>{if(Math.random()<0.93){t.closed.add(x);t.debt.delete(x);addSt(t,S.week,S.norm)}})}
+  const o=owed(t);
+  const fixLate=t.fix&&t.fix.rejWeek>t.fix.repWeek;
+  if(fixLate||o.some(x=>t.debt.has(x))){t.burned=true;t.burnedWeek=S.week;if(mine)S.mail.push({t:t.n,w:S.week,text:`Билет № ${t.n} сгорел: два пропуска подряд.`,read:false});return}
+  if(t.fix){t.fix=null}
+  if(o.length){o.forEach(x=>t.debt.add(x));if(mine)S.mail.push({t:t.n,w:S.week,text:`Билет № ${t.n}: пропуск. Не сдано чисел: ${o.join(', ')}. На следующей неделе каждое стоит ${S.norm*2} крестиков.`,read:false})}
+  if(!mine&&t.closed.size===15&&!S.winner){S.winner={n:t.n,week:S.week};S.over=true;post(`🏆 У нас есть победительница! Билет № ${t.n} закрыт полностью. Поздравляем! 🎉 Спасибо всем участницам. О следующем сезоне расскажем совсем скоро.`)}
+ });
+}
+function nextDay(){
+ if(S.over)return;
+ if(S.day<6){S.day++;freeze();render();return}
+ if(S.week===0){doDraw();freeze();render();return}
+ deadline(false);
+ if(S.over){render();return}
+ if(S.drawn.length>=90){
+  const lastAcc=n=>{const rs=S.reports.filter(r=>r.t===n&&r.status==='accepted');return rs.length?Math.max(...rs.map(r=>r.id)):0};
+  const c=S.tickets.filter(t=>t.active&&!t.burned).sort((a,b)=>(b.closed.size-a.closed.size)||(lastAcc(a.n)-lastAcc(b.n)))[0];
+  S.over=true;
+  if(c){S.winner={n:c.n,week:S.week,closest:true};post(`🏆 Все бочонки вытянуты! Ни один билет не закрыт полностью, поэтому побеждает билет № ${c.n} — он ближе всех к финишу (${c.closed.size} из 15). Поздравляем! 🎉 Спасибо всем участницам. О следующем сезоне расскажем совсем скоро.`);S.mail.push({t:c.n,w:S.week,text:`Поздравляем! Ваш билет № ${c.n} ближе всех к финишу — вы победили!`,read:false})}
+  else post(`❄️ Сезон «${S.season}» завершён: все бочонки вытянуты, а в игре не осталось ни одного билета. Спасибо за игру! Готовимся к следующему сезону.`);
+  render();return}
+ doDraw();freeze();
+ ALLMY().forEach(n=>{const t=T(n);if(!t.burned&&owed(t).length)S.mail.push({t:n,w:S.week,text:`Новые бочонки! На билете № ${n} есть числа к отшиву.`,read:false})});
+ render();
+}
+const totalStitched=()=>S.tickets.reduce((a,t)=>a+t.stitched,0);
+const go=(s,p={})=>{nav.push({s,...p});ui={};render();window.scrollTo(0,0)};
+const back=()=>{if(nav.length>1)nav.pop();ui={};render()};
+const topbar=(title,noBack)=>`<div class="top">${noBack?'':'<button class="back" onclick="back()">←</button>'}<h1>${title}</h1></div>`;
+const balls=arr=>`<div class="balls">${arr.map(x=>`<div class="ball">${x}</div>`).join('')}</div>`;
+
+function render(){
+ const cur=nav[nav.length-1];
+ if(cur.s==='lab'&&!staff()){nav=[{s:'home'}];return render()}
+ const f={home,room,ticket,report,mail,rules,history,lab,team}[cur.s];
+ document.getElementById('screen').innerHTML=f(cur);
+ const unread=S.mail.filter(m=>!m.read).length;
+ document.getElementById('demo').innerHTML=`<div class="row"><span><b>Демо-время:</b> ${S.week?`неделя ${S.week}`:'раздача билетов'}, ${fmt(dateAt(simDay()))}</span>
+ <span class="row" style="gap:6px"><button class="btn small gray" onclick="nextDay()" ${S.over?'disabled':''}>+1 день ▸</button><button class="btn small gray" onclick="reset(2)">Сброс</button><button class="btn small gray" onclick="reset(-1)">С раздачи</button><button class="btn small gray" onclick="reset(0)">С 1-й недели</button></span></div>
+ <div class="row" style="margin-top:6px"><span class="row" style="gap:6px">Профиль ВК: <span class="seg"><button class="${prof==='me'?'on':''}" onclick="prof='me';nav=[{s:'home'}];render()">Вы</button><button class="${prof==='helper'?'on':''}" onclick="prof='helper';nav=[{s:'home'}];render()">Помощница</button></span></span><span class="muted">${S.day===6?(S.week===0?'Завтра в 00:00 — первый розыгрыш':'Сегодня в 23:59 — конец недели'):''}</span></div>
+ <div class="muted" style="margin-top:4px">Ключ владельца для демо: <b style="color:#f0b429">${S.keys[0].code}</b></div>`;
+}
+function confirmReset(){return true}
+
+function home(){
+ const left=6-S.day;
+ const inGame=S.tickets.filter(t=>t.active&&!t.burned).length;
+ return `${S.winner?`<div class="win">Сезон завершён! Победил билет № ${S.winner.n}.</div>`:''}
+ <div class="navs"><button class="btn" onclick="go('room')">Моя комната</button><button class="btn" onclick="go('mail')">Почта${myMail().some(m=>!m.read)?' •':''}</button><button class="btn" onclick="go('history')">История розыгрышей</button><button class="btn" onclick="go('rules')">Правила</button>${staff()?`<button class="btn" style="background:#2b211d;border:1px solid #f0b429" onclick="labSec='reports';go('lab')">Лаборантская</button>`:''}</div>
+ <div class="row" style="justify-content:space-between;margin:18px 0 8px"><h2 style="margin:0">Доска объявлений</h2><span style="background:rgba(0,0,0,.35);border-radius:14px;padding:3px 10px;font-size:13px;color:#cdbfb4">🎱 Выпало: <b style="color:#f3ece4">${S.drawn.length}/90</b></span></div>
+ <div class="paper"><b>Важные объявления</b>${board().length?board().map(a=>`<div style="margin-top:6px">${a.text}</div>`).join('<hr style="border:none;border-top:1px solid #e6dccf;margin:8px 0">'):'<div class="muted" style="color:#8d7f78">Пока объявлений нет.</div>'}</div>
+ <div class="card">
+  <div class="li"><span>✨</span><span><b>Сезон:</b> ${S.season}</span></div>
+  <div class="li"><span>📅</span><span>${S.week?`<b>Неделя:</b> ${S.week} из 15`:`<b>Раздача билетов.</b> Старт ${fmt(dateAt(0))} в 00:00 МСК`}</span></div>
+  ${S.week?`<div class="li"><span>🎱</span><span><b>Бочонки этой недели:</b></span></div>
+  <div style="margin-left:30px">${balls(lastDraw())}</div>`:''}
+  <div class="li"><span>⏳</span><span>${S.week===0?`<b>До первого розыгрыша:</b> ${7-S.day} д.`:`<b>До сдачи отчётов:</b> ${S.over?'—':left===0?'сегодня до 23:59':`${left} д. (до понедельника 23:59 МСК)`}`}</span></div>
+  <div class="li"><span>🧵</span><span><b>Норма:</b> ${S.norm} крестиков за число на каждом билете</span></div>
+  <div style="margin-top:10px"><b style="color:#f3c9c9">Внимание!</b></div>
+  <div class="li"><span>❗️</span><span>Пропущенный бочонок переходит на следующую неделю со штрафом ×2.</span></div>
+  <div class="li"><span>❌</span><span>При двойном пропуске подряд билет сгорает.</span></div>
+  <div class="li"><span>📝</span><span>На фото обязательно КС в формате «номера бочонков недели, номер билета», например: «10 11 15 27 45 88, Б17»</span></div>
+ </div>
+ <div style="text-align:center;margin-top:40px"><a href="#" onclick="go('team');return false" style="color:#7d6a63;font-size:11px;text-decoration:none">Вход для команды</a></div>`;
+}
+
+function ticketTags(t){
+ const o=owed(t),tags=[];
+ if(t.fix)tags.push('<span class="tag t-rej">отклонён — исправить</span>');
+ const due=o.filter(x=>!t.debt.has(x)),db=o.filter(x=>t.debt.has(x));
+ if(due.length)tags.push(`<span class="tag t-due">к отшиву: ${due.length}</span>`);
+ if(db.length)tags.push(`<span class="tag t-debt">долг ×2: ${db.length}</span>`);
+ if(t.pending.size)tags.push(`<span class="tag t-rev">на проверке: ${t.pending.size}</span>`);
+ return tags.join('');
+}
+function room(){
+ const mine=MY().map(T);
+ const myStitched=mine.reduce((a,t)=>a+t.stitched,0);
+ const myClosed=mine.reduce((a,t)=>a+t.closed.size,0);
+ const unread=myMail().filter(m=>!m.read).length;
+ const tiles=mine.map(t=>t.burned?`<div class="tile burned"><div class="muted">Билет № ${t.n}</div><div style="font-size:16px;font-weight:bold">Сгорел</div><div class="muted">неделя ${t.burnedWeek}</div></div>`
+  :`<div class="tile" onclick="go('ticket',{n:${t.n}})"><div class="muted">Билет № ${t.n}</div><div><div style="font-size:18px;font-weight:bold">${t.closed.size} из 15</div><div class="muted">${Math.round(t.closed.size/15*100)}%</div></div><div>${ticketTags(t)}</div></div>`).join('');
+ const demoCodes=S.tickets.filter(t=>!t.active).slice(0,3).map(t=>t.code);
+ const hint=canActivate()?`<p class="muted" style="margin-top:12px">Для демо можно ввести любой из кодов: <b>${demoCodes.join(', ')}</b></p>`:`<p class="muted" style="margin-top:12px">Демо: чтобы попробовать ввод кода, нажмите внизу «С 1-й недели».</p>`;
+ return `${topbar('Моя комната')}
+ <div class="head"><div><div class="k">Вышито крестиков за сезон</div><div class="v">${myStitched.toLocaleString('ru')}</div><div class="k">Закрыто чисел</div><div class="v">${myClosed}</div></div>
+ <button class="mail" onclick="go('mail')" aria-label="Почта">✉${unread?`<span class="badge">${unread}</span>`:''}</button></div>
+ <div class="muted">Ход сезона: выпало ${S.drawn.length} из 90 бочонков</div><div class="bar"><i style="width:${S.drawn.length/90*100}%"></i></div>
+ <h2>Мои билеты</h2>
+ <div class="tiles">${tiles}
+  ${!canActivate()?(MY().length<5?`<div class="tile add" style="border-color:#5a4540"><div class="muted">Приём кодов закрыт</div><div class="muted" style="font-size:12px">Код можно было ввести до вторника 23:59 первой недели.</div></div>`:''):MY().length<5?`<div class="tile add"><div class="muted">Добавить билет (${MY().length} из 5)</div><input type="text" id="codeInp" maxlength="6" placeholder="Код билета" style="text-transform:uppercase" oninput="document.getElementById('codeErr').textContent=''"><button class="btn small" onclick="addCode()">Добавить</button><div class="err" id="codeErr"></div></div>`:''}
+ </div>
+ ${hint}`;
+}
+function addCode(){
+ const v=document.getElementById('codeInp').value.trim().toUpperCase(),e=document.getElementById('codeErr');
+ if(!v){e.textContent='Введите код';return}
+ const t=S.tickets.find(t=>t.code===v);
+ if(!t){e.textContent='Такого кода нет. Проверьте написание';return}
+ if(!canActivate()){e.textContent='Приём кодов закрыт';return}
+ if(t.active){e.textContent=MY().includes(t.n)?'Этот билет уже у вас':'Этот код уже активирован';return}
+ if(MY().length>=5){e.textContent='Максимум 5 билетов';return}
+ MY().push(t.n);t.active=true;render();
+}
+
+function ticket(p){
+ const t=T(p.n),o=owed(t);
+ const cells=t.grid.flat().map(x=>{if(x===null)return'<div class="c e"></div>';let cl='';if(t.closed.has(x))cl='x';else if(t.pending.has(x))cl='r';else if(S.drawn.includes(x))cl=t.debt.has(x)?'debt':'d';return`<div class="c ${cl}">${x}</div>`}).join('');
+ const need=o.reduce((a,x)=>a+cost(t,x),0);
+ let canReport=o.length>0&&!S.over,why='';
+ if(t.fix){canReport=true}
+ else if(t.fixSentWeek===S.week&&S.day<3&&o.length){canReport=false;why='После исправления отчёт за эту неделю откроется с пятницы.'}
+ else if(!o.length){why=t.pending.size?'Все выпавшие числа на проверке.':'Сейчас сдавать нечего.'}
+ const reps=S.reports.filter(r=>r.t===t.n).slice().reverse();
+ return `${topbar('Билет № '+t.n)}
+ <div class="card"><div class="muted">Сезон ${S.season} · всего ${(15*S.norm).toLocaleString('ru')} крестиков (15 × ${S.norm})</div>
+ <div style="margin-top:4px"><b>Закрыто ${t.closed.size} из 15</b> · нужно сдать до понедельника: <b>${need}</b> крестиков</div></div>
+ <div class="grid">${cells}</div>
+ <div class="legend"><span><i style="background:#f6d58b"></i>к отшиву</span><span><i style="background:#f5b7b1"></i>долг ×2</span><span><i style="background:#bcd6f2"></i>на проверке</span><span><i style="background:#3f9b4a"></i>закрыто</span></div>
+ ${t.fix?`<div class="card" style="border:1px solid #c0392b;margin-top:10px"><b>Отчёт отклонён.</b> Причина: ${t.fix.reason}<br><span class="muted">Исправьте до понедельника 23:59. Пока не отправите исправление, новый отчёт по билету сдать нельзя.</span></div>`:''}
+ <div style="margin-top:12px"><button class="btn green" style="width:100%" ${canReport?'':'disabled'} onclick="go('report',{n:${t.n}})">${t.fix?'Исправить отчёт':'Добавить отчёт'}</button><div class="muted" style="margin-top:6px">${why}</div></div>
+ <h2>Прогресс</h2>
+ ${reps.length?reps.map(r=>`<div class="hist"><div style="flex:1;font-size:13px"><div style="color:#8fc1ff">Неделя ${r.week}, ${DS[r.day]}${r.isFix?' · исправление':''}</div><div>Числа: ${r.nums.join(', ')}</div><div>Вышито: ${r.stitched}</div>${r.comment?`<div class="muted">Комментарий: ${r.comment}</div>`:''}</div>
+ ${r.before?`<img loading="lazy" decoding="async" class="photo" style="width:56px;height:56px" src="${r.before}"><img loading="lazy" decoding="async" class="photo" style="width:56px;height:56px" src="${r.after}">`:'<span class="muted" style="font-size:11px">фото удалены</span>'}
+ <span style="font-size:20px">${r.status==='accepted'?'<span style="color:#3f9b4a">✓</span>':r.status==='rejected'?'<span style="color:#e57373">✕</span>':'<span style="color:#8fc1ff">⏳</span>'}</span></div>`).join(''):'<div class="muted">Отчётов пока нет.</div>'}`;
+}
+
+function demoPhoto(label){
+ const c=document.createElement('canvas');c.width=300;c.height=300;const x=c.getContext('2d');
+ x.fillStyle='#f4efe6';x.fillRect(0,0,300,300);
+ for(let i=0;i<40;i++){x.strokeStyle=['#9b1c1c','#2b211d','#3f9b4a'][i%3];x.lineWidth=3;const a=30+rnd(220),b=30+rnd(160);x.beginPath();x.moveTo(a,b);x.lineTo(a+8,b+8);x.moveTo(a+8,b);x.lineTo(a,b+8);x.stroke()}
+ x.fillStyle='#fff';x.fillRect(20,220,260,60);x.fillStyle='#2b211d';x.font='bold 15px Arial';
+ x.fillText(lastDraw().join(' ')+', '+label,30,252);
+ return c.toDataURL();
+}
+function report(p){
+ const t=T(p.n);
+ const isFix=!!t.fix;
+ const list=isFix?t.fix.nums:owed(t);
+ if(!ui.sel)ui.sel=new Set(isFix?list:[]);
+ const norm=[...ui.sel].reduce((a,x)=>a+cost(t,x),0);
+ return `${topbar(isFix?'Исправление отчёта':'Дневник отчёта')}
+ <div class="card">Билет № ${t.n}</div>
+ <h2>Числа, которые вы отшили</h2>
+ ${list.map(x=>`<label class="chk"><input type="checkbox" ${ui.sel.has(x)?'checked':''} ${isFix?'disabled':''} onchange="toggleSel(${x})"> <b>${x}</b> <span class="muted">${t.debt.has(x)?`долг ×2 — ${S.norm*2} крестиков`:`${S.norm} крестиков`}</span></label>`).join('')}
+ <div class="card"><b>Норма: ${norm} крестиков</b></div>
+ <h2>Этап 1. Начало работы</h2>
+ <div class="muted">Фото «Было». В кадре КС: «${lastDraw().join(' ')}, Б${t.n}».</div>
+ <div class="row" style="margin-top:6px">${ui.before?`<img loading="lazy" decoding="async" class="photo" src="${ui.before}">`:''}<label class="btn small gray">Загрузить<input type="file" accept="image/*" hidden onchange="loadPhoto(this,'before')"></label><button class="btn small gray" onclick="ui.before=demoPhoto('Б${t.n}');render()">Демо-фото</button></div>
+ <h2>Этап 3. Завершение</h2>
+ <div class="muted">Фото «Стало» с тем же КС: «${lastDraw().join(' ')}, Б${t.n}».</div>
+ <div class="row" style="margin-top:6px">${ui.after?`<img loading="lazy" decoding="async" class="photo" src="${ui.after}">`:''}<label class="btn small gray">Загрузить<input type="file" accept="image/*" hidden onchange="loadPhoto(this,'after')"></label><button class="btn small gray" onclick="ui.after=demoPhoto('Б${t.n}');render()">Демо-фото</button></div>
+ <div style="margin-top:12px"><div class="muted">Вышито крестиков</div><input type="number" id="st" value="${ui.st??''}" oninput="ui.st=this.value"></div>
+ <div class="err" id="repErr"></div>
+ <button class="btn" style="width:100%;margin-top:6px" onclick="submitReport(${t.n})">Отправить на проверку</button>`;
+}
+function toggleSel(x){ui.sel.has(x)?ui.sel.delete(x):ui.sel.add(x);render()}
+function loadPhoto(inp,k){const f=inp.files[0];if(!f)return;const url=URL.createObjectURL(f);const img=new Image();
+ img.onload=()=>{const M=1280,sc=Math.min(1,M/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ui[k]=c.toDataURL('image/jpeg',0.8);render()};
+ img.onerror=()=>{URL.revokeObjectURL(url)};img.src=url}
+function submitReport(n){
+ const t=T(n),e=document.getElementById('repErr');
+ const st=parseInt(ui.st)||0;
+ const norm=[...ui.sel].reduce((a,x)=>a+cost(t,x),0);
+ if(!ui.sel.size){e.textContent='Отметьте хотя бы одно число';return}
+ if(!ui.before||!ui.after){e.textContent='Добавьте оба фото: «Было» и «Стало»';return}
+ if(st<norm){e.textContent=`Вышито ${st} — меньше нормы ${norm}. Отметьте меньше чисел или довышейте`;return}
+ const isFix=!!t.fix;
+ S.reports.push({id:++S.seq,t:n,nums:[...ui.sel],norm,stitched:st,before:ui.before,after:ui.after,week:S.week,day:S.day,status:'pending',isFix,repWeek:isFix?t.fix.repWeek:S.week});
+ ui.sel.forEach(x=>t.pending.add(x));
+ if(isFix){t.fix=null;t.fixSentWeek=S.week}
+ nav.pop();ui={};render();
+}
+
+function mail(){
+ const mm=myMail();
+ const html=`${topbar('Почта')}${mm.length?mm.slice().reverse().map(m=>`<div class="card" style="${m.read?'':'border:1px solid #f0b429'}"><div class="muted">Неделя ${m.w}</div>${m.text}</div>`).join(''):'<div class="muted">Писем пока нет.</div>'}`;
+ mm.forEach(m=>m.read=true);return html;
+}
+function rules(){
+ const N=S.norm,N2=N*2,f=d=>fmt(dateAt(d));
+ const sec=[
+ ['Тезисы Правил',`<p><i>Краткое содержание не заменяет полный текст. Каждая участница читает Правила целиком.</i></p><ul>
+  <li>Вышивальное лото — сезонная игра. Сезон длится около трёх месяцев, до первой победы.</li>
+  <li>Билеты бесплатные, их выдаёт организатор: от 1 до 5 в одни руки. Всего в первом сезоне 100 билетов.</li>
+  <li>Код билета вводится в «Моей комнате» <b>до 23:59 (МСК) дня первого розыгрыша</b> — ${f(0)}. Потом приём кодов закрывается.</li>
+  <li>Каждый вторник в 00:00 (МСК) из мешочка достают <b>6 бочонков</b>. Совпадения подсвечиваются в билетах.</li>
+  <li>Норма: <b>${N} крестиков за каждое совпавшее число на каждом билете</b>. Один отчёт — один билет.</li>
+  <li>Срок сдачи — <b>до понедельника 23:59 (МСК)</b>. В отчёте два фото, «Было» и «Стало», и на обоих — КС.</li>
+  <li>Пропущенный бочонок переходит на следующую неделю со штрафом <b>×2</b>. При двойном пропуске подряд <b>билет сгорает</b>.</li>
+  <li>Побеждает та, у кого <b>первой приняты все 15 чисел</b> одного билета. После первой победы сезон заканчивается.</li></ul>`],
+ ['Цель игры',`<p>Главная цель — вышивать в удовольствие и в хорошем ритме. Бочонки задают темп, азарт добавляет мотивации, а в конце сезона самую быструю и упорную ждёт приз.</p>`],
+ ['Сезон и расписание',`<table><tr><td>Раздача билетов и приём кодов</td><td>${f(-7)} — ${f(0)}, до 23:59</td></tr><tr><td>Первый розыгрыш</td><td>${f(0)}, 00:00</td></tr><tr><td>Розыгрыши</td><td>каждый вторник, 00:00</td></tr><tr><td>Сдача отчётов</td><td>со вторника 00:00 до понедельника 23:59</td></tr><tr><td>Последний возможный розыгрыш</td><td>15-я неделя, ${f(98)}</td></tr><tr><td>Окончание</td><td>в момент первой победы или после 15-й недели</td></tr></table>
+  <p>Всего в мешочке 90 бочонков, каждую неделю их достают по 6, поэтому за сезон проходит не больше 15 розыгрышей. По расчётам первый билет закрывается примерно на 10–12-й неделе.</p>
+  <p>Всё время в игре — <b>московское</b>. Планируйте сдачу заранее: жалобы на интернет и «не успела нажать» не принимаются.</p>`],
+ ['Билеты',`<h3>Как получить билет</h3><ul><li>Билеты бесплатные. Их выдаёт организатор лично, например в сообщениях ВКонтакте.</li><li>Одной участнице — <b>не больше 5 билетов</b>. Сгоревшие билеты тоже входят в эти пять.</li><li>В первом сезоне ровно 100 билетов. Когда они закончатся, раздача прекращается.</li></ul>
+  <h3>Билет и код</h3><p>Каждый билет — это карточка лото: 3 строки по 9 клеток, в каждой строке 5 чисел и 4 пустые клетки. Всего на билете <b>15 чисел от 1 до 90</b>. Числа случайные и закреплены за билетом до конца сезона.</p><p>У каждого билета есть номер и <b>секретный код из 6 символов</b>. Код — это ключ к билету: кто знает код, тот может сдавать по нему отчёты.</p>
+  <h3>Ввод кода</h3><ol><li>Зайдите в «Мою комнату».</li><li>В плитке «Добавить билет» введите код и нажмите «Добавить».</li><li>Если билетов несколько, введите все коды по очереди.</li></ol><p>Код вводится один раз. Билеты привязываются к вашему профилю ВКонтакте и видны и с телефона, и с компьютера.</p><p><b>Приём кодов закрывается ${f(0)} в 23:59 (МСК).</b> Билет, код которого не введён вовремя, в игре не участвует.</p>
+  <h3>Важно</h3><ul><li>Нельзя передавать код другим людям и вводить чужие коды.</li><li>Если код потерялся или его узнал кто-то другой, сразу напишите организатору. Он выпустит новый код, а старый перестанет работать.</li></ul>`],
+ ['Розыгрыш бочонков',`<ul><li>Каждый вторник в 00:00 (МСК) приложение достаёт из мешочка 6 случайных бочонков. Выпавший бочонок обратно не возвращается.</li><li>Бочонки недели видны на главной странице, а все прошлые — в «Истории розыгрышей».</li><li>Совпадения сразу подсвечиваются в билетах. Если на билете ничего не совпало — сдавать по нему нечего, и это не пропуск.</li></ul>`],
+ ['Норма',`<p>За <b>каждое совпавшее число на каждом билете</b> нужно вышить <b>${N} крестиков</b>. Билеты считаются отдельно.</p>
+  <table><tr><td>На билете № 17 совпали 2 числа</td><td>${N*2}</td></tr><tr><td>Число 47 совпало на трёх ваших билетах</td><td>${N*3} — по ${N} в отчёт каждого билета</td></tr><tr><td>На № 17 два числа, на № 52 одно</td><td>№ 17 — ${N*2}, № 52 — ${N}</td></tr><tr><td>На билете № 23 совпадений нет</td><td>ничего</td></tr></table>
+  <ul><li>Вышить можно и больше нормы, но лишние крестики никуда не переносятся.</li><li>Вышивать можно любую свою работу.</li></ul>
+  <h3>Пересчёт в крестики других швов и элементов</h3><ul><li>1 крестик, мелкокрестик, бисеринка = 1 крестик</li><li>1 полукрест, четверть-крест, три-четверти-крест = 0,5 крестика</li><li>1 стежок бэкстич = 0,5 крестика</li><li>1 французский узелок = 1 крестик</li><li>1 болгарский крест = 2 крестика</li><li>1 пуговица или другой пришивной элемент = 4 крестика</li></ul>
+  <p>Бэкстич и французские узелки можно считать по Саге. <b>Декоративные швы</b> считаются по площади, занятой швом; Сага для них не подходит. <b>Блэкворк</b> — по площади: 1 клеточка = 0,5 крестика. <b>Дизайны Совиного леса</b> уже пересчитаны в крестики. <b>Дизайны других авторов</b> с декоративными швами считаются по площади, если элементы не увеличены вышивальщицей.</p>`],
+ ['Отчёт',`<h3>Когда сдавать</h3><ul><li>Со вторника 00:00 до понедельника 23:59 (МСК), в любой день.</li><li>Если по билету отклонён отчёт, новый отчёт по нему можно сдать только <b>с пятницы</b> и только после исправления.</li></ul>
+  <h3>Главное правило</h3><p><b>Один отчёт — один билет.</b> Один и тот же кусок отшива нельзя показать в отчётах разных билетов: за каждый билет нужно отшить отдельную норму.</p>
+  <h3>Фото и КС</h3><p>В каждом отчёте два фото: <b>«Было»</b> — до начала отшива, и <b>«Стало»</b> — когда норма вышита. На обоих в кадре обязательно <b>КС</b> — бумажка в формате «номера бочонков недели, номер билета», например: <b>«10 11 15 27 45 88, Б17»</b>. Отчёт без КС или с чужим КС будет отклонён.</p>
+  <h3>Как заполнить</h3><ol><li>Откройте билет и нажмите «Добавить отчёт».</li><li>Отметьте отшитые числа — приложение покажет норму.</li><li>Загрузите фото «Было» и «Стало» с КС.</li><li>Укажите, сколько вышито (не меньше нормы).</li><li>Нажмите «Отправить на проверку».</li></ol><p>Можно отшить только часть выпавших чисел — остальные считаются пропуском.</p>`],
+ ['Проверка отчётов',`<ul><li>Проверяющие смотрят КС, фото и видно ли, что вышито заявленное количество.</li><li><b>Число закрывается только после принятия отчёта.</b></li><li>О результате приходит письмо в «Почту». К отклонённому отчёту обязательно пишется причина.</li><li>Крестики засчитываются в ту неделю, за которую сдан отчёт.</li></ul>
+  <h3>Если отчёт отклонён</h3><p>Отклонение — не пропуск. Исправьте и отправьте отчёт заново <b>до ближайшего понедельника 23:59</b>. Пока исправление не отправлено, новый отчёт по билету сдать нельзя; после — он откроется с пятницы. Не исправили — двойной пропуск, и <b>билет сгорает</b>.</p>
+  <h3>Фото после проверки</h3><p>После приёма отчёта фото удаляются. Сохраняйте свои фото сами.</p>`],
+ ['Пропуски и штрафы',`<ul><li><b>Пропуск</b> — любой выпавший бочонок, который не закрыт в текущий отчёт к понедельнику 23:59.</li><li><b>Штраф ×2.</b> На следующей неделе пропущенное число стоит <b>${N2}</b> крестиков вместо ${N}. Новые числа — по обычной норме.</li><li><b>Отработка.</b> Сданы и долг, и новые числа — билет снова чистый.</li><li><b>Сгорание.</b> Долг не отработан и неделя снова пропущена — билет сгорает.</li><li>Пропуски не подряд билет не сжигают.</li></ul>
+  <table><tr><td>Неделя 1</td><td>Выпали 3 числа, сдано 1 → 2 числа в долг</td></tr><tr><td>Неделя 2</td><td>Выпало ещё 1 → нужно 2 × ${N2} + ${N} = <b>${N2*2+N}</b></td></tr><tr><td>Сданы все</td><td>долг закрыт</td></tr><tr><td>Долг не сдан</td><td><b>билет сгорает</b></td></tr></table>`],
+ ['Победа и окончание сезона',`<ul><li>Побеждает участница, у которой <b>первой приняты все 15 чисел</b> одного билета.</li><li>При ничьей побеждает та, что <b>раньше отправила</b> последний отчёт по билету.</li><li>После победы сезон заканчивается.</li><li>Если выпали все 90 бочонков, а закрытого билета нет, побеждает билет, ближе всего к финишу: больше всего закрытых чисел среди несгоревших; при равенстве — тот, чей последний принятый отчёт отправлен раньше.</li></ul>
+  <p><b>Призы:</b></p>${S.prizes.length?`<ul>${S.prizes.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p>будут объявлены ближе к старту.</p>'}`],
+ ['Объявления и почта',`<ul><li>На главной — доска объявлений: старт сезона, новости, итоги.</li><li>В «Почту» приходят личные письма: новые бочонки, результаты проверки, пропуски, сгорание билетов.</li></ul>`],
+ ['Персональная ответственность',`<p>Каждая участница вышивает сама. Нельзя показывать чужую вышивку, отчитываться одной работой за несколько билетов или передавать код. Если обнаружится попытка ввести проверяющих в заблуждение, организатор вправе <b>снять билет с игры</b>.</p>`],
+ ['Личные данные',`<p>Приложение не собирает имена, телефоны и адреса. На сервере хранятся только номера билетов, отчёты и фото вышивки, причём фото удаляются после проверки.</p>`],
+ ['Техподдержка',`<p>Сначала обновите приложение ВКонтакте и браузер. Не помогло — отметьте в чате <b>Лену Макаркину</b> и приложите скриншот. С вопросами по правилам — тоже к Лене в чате.</p>`],
+ ['Частые вопросы',`<p><b>Сменила телефон — билеты пропали?</b> Нет, они привязаны к профилю ВКонтакте.</p><p><b>Потеряла код.</b> Если уже ввели его — билет у вас. Если нет — напишите организатору.</p><p><b>Можно вышить вперёд?</b> Нет, фото «Было» с КС делается после розыгрыша.</p><p><b>Ничего не совпало — это пропуск?</b> Нет.</p><p><b>Вышила больше нормы — лишнее пригодится?</b> Нет, запаса нет.</p><p><b>Можно билет вместо сгоревшего?</b> Нет, после старта билеты не выдаются.</p>`]];
+ return `${topbar('Правила')}<div class="paper rules"><h3 style="margin-top:0">Содержание</h3><ol>${sec.map((s,i)=>`<li><a href="#" onclick="document.getElementById('r${i}').scrollIntoView();return false">${s[0]}</a></li>`).join('')}</ol>
+ ${sec.map((s,i)=>`<h2 id="r${i}">${s[0]}</h2>${s[1]}<div style="text-align:right"><a href="#" onclick="window.scrollTo(0,0);return false" style="font-size:12px">наверх ↑</a></div>`).join('')}</div>`;
+}
+function history(){
+ const mineW=w=>{const k=S.wk[w];return k?MY().reduce((a,n)=>a+(k.by[n]||0),0):0};
+ const tot=totalStitched(),myTot=MY().reduce((a,n)=>a+T(n).stitched,0);
+ const cell=(l,v)=>`<div style="background:rgba(0,0,0,.3);border-radius:8px;padding:2px 8px;font-size:12px;color:#cdbfb4;min-width:92px;display:flex;justify-content:space-between;gap:6px">${l}<b style="font-size:13px;color:#f3ece4">${v.toLocaleString('ru')}</b></div>`;
+ return `${topbar('История розыгрышей')}
+ <div class="stats"><div class="stat"><span>Вышито всеми</span><b>${tot.toLocaleString('ru')}</b></div><div class="stat"><span>Вышито вами</span><b>${myTot.toLocaleString('ru')}</b></div></div>
+ ${S.draws.map((d,i)=>{const w=i+1,k=S.wk[w];return`<div class="card" style="padding:10px 12px"><b>Неделя ${w}</b><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><div style="flex:1;min-width:0">${balls(d)}</div><div style="display:flex;flex-direction:column;gap:4px">${cell('Все',k?k.all:0)}${cell('Вы',mineW(w))}</div></div></div>`}).reverse().join('')}
+ <div class="muted">Крестики засчитываются в ту неделю, за которую сдан отчёт, после его приёма.</div>`;
+}
+
+function lab(){
+ const me=staff(),isOwner=me.role==='owner',hideOwn=r=>!isOwner&&MY().includes(r.t);
+ const own=S.reports.filter(r=>r.status==='pending'&&hideOwn(r)).length;
+ const pend=S.reports.filter(r=>r.status==='pending'&&!hideOwn(r));
+ const rej=S.reports.filter(r=>r.status==='rejected'),acc=S.reports.filter(r=>r.status==='accepted');
+ const tb=(k,l,n)=>`<button class="${labTab===k?'on':''}" onclick="labTab='${k}';render()">${l} (${n})</button>`;
+ const tabs=`<div class="seg" style="margin:6px 0 10px">${tb('pending','На проверке',pend.length)}${tb('rejected','Отклонённые',rej.length)}${tb('accepted','Принятые',acc.length)}</div>`;
+ const list=labTab==='rejected'?rej:acc;
+ const sb=(k,l)=>`<button class="btn small ${labSec===k?'':'gray'}" onclick="labSec='${k}';render()">${l}</button>`;
+ const secs=`<div class="row" style="gap:6px;margin-bottom:10px;flex-wrap:wrap">${sb('reports','Отчёты'+(pend.length?' ('+pend.length+')':''))}${sb('tickets','Билеты')}${me.role==='owner'?sb('season','Сезон')+sb('ann','Объявления')+sb('team','Команда'):''}</div>`;
+ const other=list.length?list.slice().reverse().map(r=>{const fixed=S.reports.some(x=>x.isFix&&x.t===r.t&&x.id>r.id);return`<div class="card"><b>Билет № ${r.t}</b> <span class="muted">· неделя ${r.week}, ${DS[r.day]}</span>${r.isFix?' · <span class="tag t-rej">исправление</span>':''}<div>Числа: ${r.nums.join(', ')} · вышито ${r.stitched}</div><div class="muted">${r.status==='accepted'?'Принят':'Отклонён'} · ${r.by||'—'}</div>${r.comment||r.reason?`<div class="muted">Комментарий: ${r.comment||r.reason}</div>`:''}${labTab==='rejected'?`<div style="margin-top:4px">${fixed?'<span class="tag t-rev">исправление отправлено</span>':T(r.t).burned?'<span class="tag t-rej">билет сгорел</span>':'<span class="tag t-due">ждём исправления</span>'}</div>`:'<div class="muted">Фото удалены после приёма</div>'}</div>`}).join(''):'<div class="muted">Пусто.</div>';
+ const act=S.tickets.filter(t=>t.active);
+ const rows=act.slice().sort((a,b)=>(a.burned-b.burned)||(b.closed.size-a.closed.size));
+ return `${topbar('Лаборантская')}
+ <div class="muted" style="margin:-6px 0 10px">Вы вошли как: <b>${me.label}</b> · <a href="#" style="color:#cdbfb4" onclick="S.profiles[prof].key=null;nav=[{s:'home'}];render();return false">выйти</a></div>
+ ${S.winner?`<div class="win">Победил билет № ${S.winner.n} (неделя ${S.winner.week}). Сезон закрыт.</div>`:''}
+ ${secs}
+ ${labSec==='reports'?`${tabs}
+ ${labTab==='pending'&&own?`<div class="muted" style="margin-bottom:8px">Отчёты по вашим билетам (${own}) скрыты — их проверяет другой участник команды или владелец.</div>`:''}
+ ${labTab!=='pending'?other:pend.length?pend.map(r=>{const t=T(r.t);return`<div class="card"><div><b>Билет № ${r.t}</b>${MY().includes(r.t)?' <span class="tag t-due">ваш билет</span>':''}${r.isFix?' · <span class="tag t-rej">исправление</span>':''} <span class="muted">· неделя ${r.week}, ${DS[r.day]}</span></div>
+ <div style="margin:4px 0">Числа: <b>${r.nums.join(', ')}</b> · норма ${r.norm} · вышито <b>${r.stitched}</b></div>
+ <div class="muted">КС должно быть: «${S.draws[r.week-1].join(' ')}, Б${r.t}»</div>
+ <div class="row" style="margin:8px 0"><div><div class="muted">Было</div><img loading="lazy" decoding="async" class="photo" src="${r.before}"></div><div><div class="muted">Стало</div><img loading="lazy" decoding="async" class="photo" src="${r.after}"></div></div>
+ <textarea id="rs${r.id}" placeholder="Комментарий: при приёме — по желанию, при отклонении — обязательно"></textarea><div class="err" id="re${r.id}"></div>
+ <div class="row"><button class="btn green small" onclick="accept(${r.id})">Принять</button><button class="btn small" onclick="reject(${r.id})">Отклонить</button></div></div>`}).join(''):'<div class="muted">Новых отчётов нет.</div>'}
+`:''}
+ ${labSec==='tickets'?`<div class="stats"><div class="stat"><span>Активировано</span><b>${act.length}/100</b></div><div class="stat"><span>В игре</span><b>${act.filter(t=>!t.burned).length}</b></div><div class="stat"><span>Сгорело</span><b>${act.filter(t=>t.burned).length}</b></div></div><div class="muted" style="margin-bottom:6px">Только билеты, код которых введён участницей. Ближе всех к финишу сверху, сгоревшие внизу. ★ — билеты демо-участницы.</div>
+ <div class="card" style="padding:6px"><table><tr><th>№</th><th>Закрыто</th><th>К отшиву</th><th>Долг</th><th>Статус</th></tr>
+ ${rows.map(t=>{const o=owed(t);return`<tr style="${t.burned?'color:#8d7f78':''}"><td>${t.n}${MY().includes(t.n)?' ★':''}</td><td>${t.closed.size}/15</td><td>${o.filter(x=>!t.debt.has(x)).length}</td><td>${o.filter(x=>t.debt.has(x)).length}</td><td>${t.burned?'сгорел':t.fix?'исправить':t.pending.size?'на проверке':'в игре'}</td></tr>`}).join('')}</table>
+ </div>`:''}
+ ${labSec==='team'&&me.role==='owner'?`<div class="muted" style="margin-bottom:8px">Ключи доступа для команды. Метка — условное имя, расшифровка только у вас.</div>
+ ${S.keys.map((k,i)=>`<div class="card row" style="justify-content:space-between"><div><b>${k.label}</b> <span class="muted">· ${k.role==='owner'?'владелец':'проверяющая'}</span><div style="font-family:monospace;color:${k.active?'#f0b429':'#8d7f78'}">${k.code}</div><div class="muted">${k.active?'активен':'отключён'}</div></div>${k.role==='owner'?'':`<button class="btn small ${k.active?'':'green'}" onclick="S.keys[${i}].active=!S.keys[${i}].active;render()">${k.active?'Отключить':'Включить'}</button>`}</div>`).join('')}
+ <h2>Создать ключ проверяющей</h2>
+ <div class="row"><input type="text" id="klabel" placeholder="Метка, например П-1" oninput="document.getElementById('kerr').textContent=''"><button class="btn small" onclick="newKey()">Создать</button></div><div class="err" id="kerr"></div>`:''}
+ ${labSec==='season'&&me.role==='owner'?seasonSec():''}
+ ${labSec==='ann'&&me.role==='owner'?annSec():''}`;
+}
+function seasonSec(){
+ const st=new Date(S.startDate+'T00:00:00'),isTue=st.getDay()===2;
+ const rows=[['Раздача билетов, приём кодов',fmt(dateAt(-7))+' – '+fmt(dateAt(0))+', до 23:59'],['Первый розыгрыш',fmt(dateAt(0))+', 00:00'],['Последний день ввода кодов',fmt(dateAt(0))+', 23:59'],['Сдача отчётов 1-й недели',fmt(dateAt(6))+', до 23:59'],['Последний возможный розыгрыш (15-я неделя)',fmt(dateAt(98))]];
+ return `<div class="card"><div class="muted">Название сезона</div><input type="text" id="sname" value="${S.season}">
+ <div class="muted" style="margin-top:8px">Дата старта — день первого розыгрыша (вторник)</div><input type="date" id="sdate" value="${S.startDate}" style="width:100%;padding:9px;border-radius:8px;border:1px solid #6b5550;background:#2a1c18;color:#f3ece4;font-size:14px">
+ <div class="muted" style="margin-top:8px">Норма за 1 бочонок (крестиков)</div><input type="number" id="snorm" min="10" step="10" value="${S.norm}" ${S.week>0?'disabled':''}>
+ ${S.week>0?'<div class="muted" style="font-size:12px">После старта норму менять нельзя: она уже действует в отчётах и долгах.</div>':''}
+ <div class="muted" style="margin-top:8px">Призы — каждый с новой строки</div><textarea id="sprizes" style="min-height:80px">${S.prizes.join('\n')}</textarea>
+ <div class="err" id="serr">${isTue?'':'Выбранная дата — не вторник. Розыгрыши проходят по вторникам.'}</div>
+ <button class="btn small" onclick="saveSeason()">Сохранить</button></div>
+ <h2>Расписание сезона</h2><div class="card" style="padding:6px"><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></div>
+ <div class="muted">Даты отложенных объявлений считаются от даты старта — см. раздел «Объявления».</div>`;
+}
+function saveSeason(){
+ const n=document.getElementById('sname').value.trim(),d=document.getElementById('sdate').value,e=document.getElementById('serr');
+ if(!n){e.textContent='Введите название';return}
+ if(!d){e.textContent='Выберите дату';return}
+ if(new Date(d+'T00:00:00').getDay()!==2){e.textContent='Дата старта должна быть вторником';return}
+ const nm=parseInt(document.getElementById('snorm').value);
+ if(S.week===0&&(!nm||nm<10)){e.textContent='Норма — целое число от 10';return}
+ if(S.week===0)S.norm=nm;
+ S.prizes=document.getElementById('sprizes').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ S.season=n;S.startDate=d;e.textContent='';render();
+}
+function annSec(){
+ const now=simDay();
+ return `<h2 style="margin-top:0">Отложенные объявления</h2>
+ ${S.sched.slice().sort((a,b)=>a.off-b.off).map(a=>{const i=S.sched.indexOf(a);const pub=a.off<=now;return`<div class="card"><div class="row" style="justify-content:space-between"><b>${fmt(dateAt(a.off))}, 00:00</b><span class="tag ${pub?'t-rev':'t-due'}">${pub?'опубликовано':'запланировано'}</span></div><div style="margin:6px 0">${a.frozen||subst(a.text)}</div><button class="btn small gray" onclick="S.sched.splice(${i},1);render()">Удалить</button></div>`}).join('')}
+ <h2>По событию (публикуются автоматически)</h2>
+ <div class="card"><b>Есть победительница</b><div style="margin-top:4px">🏆 У нас есть победительница! Билет № … закрыт полностью. Поздравляем! 🎉 Спасибо всем участницам. О следующем сезоне расскажем совсем скоро.</div></div>
+ <div class="card"><b>Все бочонки вытянуты, полностью закрытого билета нет</b><div style="margin-top:4px">🏆 Все бочонки вытянуты! Ни один билет не закрыт полностью, поэтому побеждает билет № … — он ближе всех к финишу (… из 15). Поздравляем! 🎉 Спасибо всем участницам. О следующем сезоне расскажем совсем скоро.</div></div>
+ <h2>Добавить отложенное</h2>
+ <div class="card"><div class="muted">Дата публикации (в 00:00 МСК)</div><input type="date" id="adate" value="${S.startDate}" style="width:100%;padding:9px;border-radius:8px;border:1px solid #6b5550;background:#2a1c18;color:#f3ece4;font-size:14px">
+ <div class="muted" style="margin-top:8px">Текст. Можно вставить {сезон} — название сезона, {тыс} — сколько тысяч крестиков вышито всеми (подставится как «41 тысячи» или «40 тысяч»)</div><textarea id="atext" placeholder="Текст объявления"></textarea><div class="err" id="aerr"></div>
+ <button class="btn small" onclick="addSched()">Запланировать</button></div>
+ <h2>Опубликовать сейчас</h2>
+ <div class="card"><textarea id="ann" placeholder="Срочное объявление"></textarea><button class="btn small" style="margin-top:6px" onclick="const v=document.getElementById('ann').value.trim();if(v){post(v);render()}">Опубликовать</button></div>`;
+}
+function addSched(){
+ const d=document.getElementById('adate').value,t=document.getElementById('atext').value.trim(),e=document.getElementById('aerr');
+ if(!d){e.textContent='Выберите дату';return}
+ if(!t){e.textContent='Введите текст';return}
+ const off=Math.round((new Date(d+'T00:00:00')-new Date(S.startDate+'T00:00:00'))/864e5);
+ S.sched.push({off,text:t});render();
+}
+function newKey(){
+ const l=document.getElementById('klabel').value.trim(),e=document.getElementById('kerr');
+ if(!l){e.textContent='Введите метку';return}
+ if(S.keys.some(k=>k.label===l)){e.textContent='Такая метка уже есть';return}
+ S.keys.push({code:genKey(new Set(S.keys.map(k=>k.code))),label:l,role:'checker',active:true});render();
+}
+function team(){
+ return `${topbar('Вход для команды')}<div class="card"><div class="muted" style="margin-bottom:8px">Введите ключ доступа, который вам выдал организатор.</div>
+ <input type="text" id="tkey" maxlength="8" placeholder="Ключ" style="text-transform:uppercase" oninput="document.getElementById('terr').textContent=''">
+ <div class="err" id="terr"></div><button class="btn" style="width:100%" onclick="teamLogin()">Войти</button></div>`;
+}
+function teamLogin(){
+ const v=document.getElementById('tkey').value.trim().toUpperCase(),e=document.getElementById('terr');
+ if(!v){e.textContent='Введите ключ';return}
+ const k=S.keys.find(k=>k.code===v);
+ if(!k){e.textContent='Неверный ключ';return}
+ if(!k.active){e.textContent='Этот ключ отключён';return}
+ S.profiles[prof].key=v;labSec='reports';nav=[{s:'home'},{s:'lab'}];render();
+}
+function accept(id){
+ const r=S.reports.find(r=>r.id===id),t=T(r.t);
+ const cm=document.getElementById('rs'+id).value.trim();
+ r.status='accepted';r.before=null;r.after=null;r.comment=cm;r.by=staff().label;
+ r.nums.forEach(x=>{t.pending.delete(x);t.closed.add(x);t.debt.delete(x)});
+ addSt(t,r.isFix?r.repWeek:r.week,r.stitched);
+ S.mail.push({t:t.n,w:S.week,text:`Отчёт по билету № ${t.n} принят. Закрыты числа: ${r.nums.join(', ')}.`+(cm?` Комментарий проверяющей: ${cm}`:''),read:false});
+ if(t.closed.size===15&&!S.winner){S.winner={n:t.n,week:S.week};S.over=true;post(`🏆 У нас есть победительница! Билет № ${t.n} закрыт полностью. Поздравляем! 🎉 Спасибо всем участницам. О следующем сезоне расскажем совсем скоро.`);S.mail.push({t:t.n,w:S.week,text:`Поздравляем! Билет № ${t.n} закрыт полностью — вы победили!`,read:false})}
+ render();
+}
+function reject(id){
+ const r=S.reports.find(r=>r.id===id),t=T(r.t),reason=document.getElementById('rs'+id).value.trim();
+ if(!reason){document.getElementById('re'+id).textContent='При отклонении комментарий обязателен';return}
+ r.status='rejected';r.reason=reason;r.comment=reason;r.by=staff().label;
+ r.nums.forEach(x=>t.pending.delete(x));
+ t.fix={nums:r.nums,reason,rejWeek:S.week,repWeek:r.repWeek};
+ S.mail.push({t:t.n,w:S.week,text:`Отчёт по билету № ${t.n} отклонён. Комментарий проверяющей: ${reason}. Исправьте до понедельника 23:59.`,read:false});
+ render();
+}
+reset();
+</script>
+</body>
+</html>
