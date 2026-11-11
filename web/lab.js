@@ -23,7 +23,8 @@ function lab(){
 
 // ---------- отчёты ----------
 function reports(){
-  const last={}; for(const r of L.checked) if(!last[r.t]||r.checkedAt>last[r.t].checkedAt) last[r.t]=r; const rej=L.checked.filter(r=>r.status==='rejected'&&last[r.t]===r), acc=L.checked.filter(r=>r.status==='accepted');
+  const last={}; for(const r of L.checked) if(!last[r.t]||r.checkedAt>last[r.t].checkedAt) last[r.t]=r;
+  const rej=L.checked.filter(r=>r.status==='rejected'&&last[r.t]===r), acc=L.checked.filter(r=>r.status==='accepted');
   const tb=(k,l,n)=>`<button class="${tab===k?'on':''}" onclick="LabUI.tab('${k}')">${l} (${n})</button>`;
   let html=`<div class="seg" style="margin:6px 0 10px">${tb('pending','На проверке',L.pending.length)}${tb('rejected','Отклонённые',rej.length)}${tb('accepted','Принятые',acc.length)}</div>`;
   if(tab==='pending'){
@@ -94,7 +95,7 @@ function ann(){
  <div class="card"><b>Все бочонки вытянуты, полностью закрытого билета нет</b><div style="margin-top:4px">🏆 Все бочонки вытянуты! Ни один билет не закрыт полностью, поэтому побеждает билет № … — он ближе всех к финишу (… из 15). Поздравляем! 🎉</div></div>
  <h2>Добавить отложенное</h2>
  <div class="card"><div class="muted">Дата публикации (в 00:00 МСК)</div><input type="date" id="adate" value="${L.season.startDate}" style="${inputStyle}">
- <div class="muted" style="margin-top:8px">Текст. Можно вставить {сезон} — название сезона, {тыс} — сколько тысяч крестиков вышито всеми</div><textarea id="atext"></textarea><div class="err" id="aerr"></div>
+ <div class="muted" style="margin-top:8px">Текст. Можно вставить {сезон} — название сезона, {тыс} — сколько тысяч крестиков вышито всеми, {бочонков} — сколько бочонков уже вытянуто (число обновляется каждую неделю)</div><textarea id="atext"></textarea><div class="err" id="aerr"></div>
  <button class="btn small" onclick="LabUI.schedAdd()">Запланировать</button></div>
  <h2>Опубликовать сейчас</h2>
  <div class="card"><textarea id="ptext" placeholder="Срочное объявление"></textarea><div class="err" id="perr"></div><button class="btn small" style="margin-top:6px" onclick="LabUI.postNow()">Опубликовать</button></div>`;

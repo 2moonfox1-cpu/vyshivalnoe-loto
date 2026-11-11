@@ -68,7 +68,7 @@ function deadline(s, now) {
     const fixLate = t.fix && t.fix.rejWeek > t.fix.repWeek;
     if (fixLate || o.some(x => t.debt.includes(x))) { t.burned = true; t.burnedWeek = s.processedWeek; mail(s, t.n, `Билет № ${t.n} сгорел: два пропуска подряд.`, now); continue; }
     t.fix = null;
-    if (o.length) { t.debt = [...new Set([...t.debt, ...o])]; mail(s, t.n, `Билет № ${t.n}: пропуск. Не сдано чисел: ${o.join(', ')}. На следующей неделе каждое стоит ${s.season.norm * 2} крестиков.`, now); }
+    if (o.length) { t.debt = [...new Set([...t.debt, ...o])]; mail(s, t.n, `Билет № ${t.n}: пропуск. Не сдано чисел: ${o.join(', ')}. Теперь каждое из них стоит ${s.season.norm * 2} крестиков. Закройте их до понедельника 23:59 по МСК, иначе билет сгорит.`, now); }
   }
 }
 function draw(s, now, rnd) {

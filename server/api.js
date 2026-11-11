@@ -11,12 +11,16 @@ const dayOff = (s, now) => G.dayIndex(s, now);
 const thousands = n => { const k = Math.floor(n / 1000); return k + (k % 10 === 1 && k % 100 !== 11 ? ' тысячи' : ' тысяч'); };
 const totalStitched = s => Object.values(s.tickets).reduce((a, t) => a + t.stitched, 0);
 const subst = (s, text) => text.replace(/\{сезон\}/g, s.season.name).replace(/\{тыс\}/g, thousands(totalStitched(s)));
+// {бочонков} подставляется в момент показа, поэтому число всегда актуальное
+const plural = (n, a, b, c) => { const m = n % 100, k = n % 10; return m > 10 && m < 20 ? c : k === 1 ? a : k >= 2 && k <= 4 ? b : c; };
+const live = (s, text) => text.replace(/\{бочонков\}/g, () => { const n = s.draws.reduce((x, d) => x + d.balls.length, 0); return n + ' ' + plural(n, 'бочонок', 'бочонка', 'бочонков'); });
 const DEFAULT_SCHED = [
   { off: -7, text: '🎉 Сезон «{сезон}» открыт! Внесите свои билеты в разделе «Моя комната». Код можно ввести до вторника 23:59 по МСК — дня первого розыгрыша. Потом приём закрывается.' },
   { off: -1, text: '❄️ Скоро старт! Проверьте, что все ваши билеты на месте в «Моей комнате». Первые бочонки достанем из мешочка во вторник в 00:00 по МСК.' },
-  { off: 0, text: '🎉 Мешочек открыт, первые бочонки вытянуты! Загляните в свои билеты: совпадения подсвечены. ⚠️ Последний шанс ввести код билета — сегодня до 23:59.' },
-  { off: 21, text: '✨ Игра набирает обороты: уже выпало 24 бочонка из 90!' },
-  { off: 35, text: '🏁 Половина пути позади! Выпало почти 40 бочонков. У кого-то закрыта уже треть билета. Держим темп!' },
+  { off: 0, text: '🎉 Мешочек открыт, первые бочонки вытянуты! Загляните в свои билеты: совпадения подсвечены.' },
+  { off: 7, text: '🎲 Новые бочонки вытянуты! Загляните в свои билеты: совпадения подсвечены. Будьте внимательны к билетам на исправлении: исправленный отчёт нужно отправить до понедельника 23:59 по МСК.' },
+  { off: 21, text: '✨ Игра набирает обороты: из мешочка уже достали {бочонков} из 90!' },
+  { off: 35, text: '🏁 Половина пути позади! Из мешочка достали уже {бочонков} из 90. У кого-то закрыта уже треть билета. Держим темп!' },
   { off: 42, text: '💪 Вышито уже больше {тыс} крестиков всеми вместе! Спасибо, что вы с нами.' },
   { off: 56, text: '🔥 Напряжение растёт! Некоторые билеты совсем близко к финишу. Каждый новый бочонок может стать последним.' },
   { off: 70, text: '⏳ Финал близко! Не копите долги: при двойном пропуске подряд билет сгорает, и обидно потерять его в шаге от победы.' },
@@ -33,7 +37,7 @@ function maintain(s, now) {
 function board(s, now) {
   const items = s.sched.filter(a => a.off <= dayOff(s, now)).map(a => ({ at: G.startMs(s) + a.off * G.DAY, text: a.frozen || subst(s, a.text) }))
     .concat(s.posts.map(p => ({ at: p.at, text: p.text }))).sort((a, b) => b.at - a.at);
-  return items[0] ? items[0].text : '';
+  return items[0] ? live(s, items[0].text) : '';
 }
 
 function makeApi({ store, ownerKey, now: clock = () => Date.now() }) {
@@ -140,7 +144,7 @@ function makeApi({ store, ownerKey, now: clock = () => Date.now() }) {
         checked: Object.values(hist).flat().sort((a, b) => b.checkedAt - a.checkedAt).slice(0, 300),
         fixed: Object.fromEntries(Object.values(s.tickets).map(t => [t.n, { fix: !!t.fix, burned: t.burned }])),
         tickets: Object.values(s.tickets).filter(t => t.active).map(t => ({ n: t.n, closed: t.closed.length, owed: G.owed(s, t).filter(x => !t.debt.includes(x)).length, debt: G.owed(s, t).filter(x => t.debt.includes(x)).length, pending: t.pending.length, fix: !!t.fix, burned: t.burned, mine: mine.includes(t.n) })),
-        ...(k.role === 'owner' ? { season: pub(s), sched: s.sched.map(a => ({ ...a, date: G.startMs(s) + a.off * G.DAY + 3 * 3600e3, published: a.off <= dayOff(s, now), text: a.frozen || subst(s, a.text) })), keys: s.keys, activated: Object.values(s.tickets).filter(t => t.active).length } : {}),
+        ...(k.role === 'owner' ? { season: pub(s), sched: s.sched.map(a => ({ ...a, date: G.startMs(s) + a.off * G.DAY + 3 * 3600e3, published: a.off <= dayOff(s, now), text: live(s, a.frozen || subst(s, a.text)) })), keys: s.keys, activated: Object.values(s.tickets).filter(t => t.active).length } : {}),
       };
     },
     async review({ key, codes, id, accept, comment }) {
