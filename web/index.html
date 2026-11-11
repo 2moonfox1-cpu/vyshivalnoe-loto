@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Вышивальное лото</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#2a1c18;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#f3ece4;display:flex;justify-content:center}
+.li{display:grid;grid-template-columns:24px 1fr;column-gap:6px;align-items:start;margin:3px 0}
+.li>span:first-child{text-align:center}
+.app{width:100%;max-width:440px;min-height:100vh;background:#3b2622;display:flex;flex-direction:column}
+.screen{flex:1;padding:14px 14px 40px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{background:none;border:none;color:#f3ece4;font-size:22px;cursor:pointer;padding:0 6px}
+h1{font-size:19px;margin:0;font-weight:bold}
+h2{font-size:15px;margin:18px 0 8px}
+.btn{background:#9b1c1c;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:bold;cursor:pointer}
+.btn.green{background:#3f9b4a}.btn.gray{background:#5a4540}.btn.small{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:rgba(0,0,0,.28);border-radius:12px;padding:12px;margin-bottom:10px}
+.paper{background:#fbf7ee;color:#2b211d;border-radius:12px;padding:14px;margin-bottom:10px;line-height:1.45;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{background:rgba(0,0,0,.35);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px;margin-top:2px;line-height:1.2}
+.stat span{font-size:12px;color:#cdbfb4}
+.navs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.muted{color:#cdbfb4;font-size:13px}
+.balls{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.ball{width:34px;height:34px;border-radius:50%;background:#f0d9a8;color:#5a3a12;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid #c99a3c}
+.head{background:#9b1c1c;border-radius:12px;padding:12px;display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.head .k{font-size:12px;color:#f3c9c9}.head .v{font-size:17px;font-weight:bold;margin-bottom:6px}
+.mail{position:relative;background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
+.badge{position:absolute;top:-4px;right:-8px;background:#f0b429;color:#3b2622;border-radius:10px;font-size:11px;padding:1px 6px;font-weight:bold}
+.bar{height:14px;background:rgba(0,0,0,.4);border-radius:8px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:#c0392b}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:rgba(255,255,255,.08);border:1px solid #9b1c1c;border-radius:12px;padding:12px;min-height:118px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
+.tile.burned{background:rgba(255,255,255,.04);border-color:#5a4540;color:#8d7f78;cursor:not-allowed}
+.tile.add{border-style:dashed;cursor:default}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:2px 6px;margin:2px 2px 0 0;font-weight:bold}
+.t-due{background:#f0d9a8;color:#5a3a12}.t-debt{background:#f5b7b1;color:#78201a}.t-rev{background:#bcd6f2;color:#123d66}.t-rej{background:#f5b7b1;color:#78201a}
+.grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;background:#fbf7ee;padding:6px;border-radius:10px}
+.c{aspect-ratio:1/1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;background:#fff;color:#2b211d;border:1px solid #d9cfc4;position:relative}
+.c.e{background:#eee6da;border-color:#eee6da}
+.c.d{background:#f6d58b;border-color:#c99a3c}
+.c.debt{background:#f5b7b1;border-color:#c0392b}
+.c.r{background:#bcd6f2;border-color:#4a86c5}
+.c.x{background:#cfe9d6;border-color:#3f9b4a;color:#1d5a2a}
+.c.x::after{content:"";position:absolute;inset:12%;border-radius:50%;background:rgba(63,155,74,.55)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#cdbfb4;margin-top:8px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+input[type=text],input[type=number],textarea{width:100%;padding:9px;border-radius:8px;border:1px solid #6b5550;background:#2a1c18;color:#f3ece4;font-size:14px}
+textarea{min-height:60px}
+.row{display:flex;gap:8px;align-items:center}
+.err{color:#ff9b8f;font-size:13px;margin-top:6px;min-height:16px}
+.ok{color:#9fe0a9;font-size:13px}
+.photo{width:92px;height:92px;border-radius:8px;object-fit:cover;background:#2a1c18;border:1px solid #6b5550}
+.chk{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.06);margin-bottom:6px;cursor:pointer}
+.hist{display:flex;gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding:10px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}
+.demo{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:#15100e;border-top:2px solid #f0b429;padding:8px 10px;font-size:12px}
+.demo .row{justify-content:space-between;flex-wrap:wrap;gap:6px}
+.seg button{background:#3b2622;color:#f3ece4;border:1px solid #6b5550;padding:5px 9px;font-size:12px;cursor:pointer}
+.seg button.on{background:#f0b429;color:#2a1c18;font-weight:bold}
+.rules h2{font-size:16px;color:#9b1c1c;margin:18px 0 6px}.rules h3{font-size:14px;margin:12px 0 4px}.rules a{color:#9b1c1c}.rules ul,.rules ol{padding-left:20px;margin:6px 0}.rules table{font-size:13px;margin:6px 0}.rules td{border-bottom:1px solid #e6dccf;padding:4px}
+.win{background:#f0b429;color:#2a1c18;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px}
+.loading{text-align:center;padding:60px 0;color:#cdbfb4}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#15100e;border:1px solid #f0b429;border-radius:10px;padding:10px 14px;font-size:13px;max-width:90%;z-index:9}
+</style>
+
+</head>
+<body>
+<div class="app"><div class="screen" id="screen"><div class="loading">Загружаем…</div></div></div>
+<div id="toast"></div>
+<script src="config.js"></script>
+<script src="https://unpkg.com/@vkontakte/vk-bridge@2/dist/browser.min.js"></script>
+<script>
+// ===== Настройка: адрес сервера (заполняется при установке) =====
+const API_URL = window.LOTO_API || '';
+// ================================================================
+const DS=['Вт','Ср','Чт','Пт','Сб','Вс','Пн'];
+const bridge=window.vkBridge||null;
+let D=null, nav=[{s:'home'}], ui={}, codes=[], staffKey='', seenMail=0, busy=false;
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- хранилище кодов: ВКонтакте (на всех устройствах) или браузер ----------
+async function loadStore(){
+  try{ if(bridge){ const r=await bridge.send('VKWebAppStorageGet',{keys:['codes','staffKey','seenMail']});
+    const m=Object.fromEntries(r.keys.map(k=>[k.key,k.value])); codes=JSON.parse(m.codes||'[]'); staffKey=m.staffKey||''; seenMail=+m.seenMail||0; return; } }catch(e){}
+  try{ codes=JSON.parse(localStorage.getItem('loto.codes')||'[]'); staffKey=localStorage.getItem('loto.staffKey')||''; seenMail=+localStorage.getItem('loto.seenMail')||0; }catch(e){}
+}
+async function saveStore(){
+  const kv={codes:JSON.stringify(codes),staffKey,seenMail:String(seenMail)};
+  try{ if(bridge){ for(const [key,value] of Object.entries(kv)) await bridge.send('VKWebAppStorageSet',{key,value}); return; } }catch(e){}
+  try{ localStorage.setItem('loto.codes',kv.codes); localStorage.setItem('loto.staffKey',staffKey); localStorage.setItem('loto.seenMail',kv.seenMail); }catch(e){}
+}
+
+// ---------- сервер ----------
+async function api(action,data={}){
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data})});
+  let j={}; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const e=new Error(j.message||'Нет связи с сервером. Попробуйте ещё раз'); e.code=j.error; throw e; }
+  return j;
+}
+async function refresh(){
+  D=await api('state',{codes});
+  if(D.lostCodes&&D.lostCodes.length){ codes=codes.filter(c=>!D.lostCodes.includes(c)); await saveStore(); toast('Один из ваших кодов больше не действует. Если это ошибка — напишите организатору'); }
+}
+function toast(t){ const el=document.getElementById('toast'); el.innerHTML=`<div class="toast">${esc(t)}</div>`; clearTimeout(toast.t); toast.t=setTimeout(()=>el.innerHTML='',4000); }
+
+// ---------- даты ----------
+const dateAt=off=>{const d=new Date(D.season.startDate+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+off);return d};
+const fmt=d=>d.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'});
+
+// ---------- навигация ----------
+const cur=()=>nav[nav.length-1];
+function go(s,p={}){nav.push({s,...p});ui={};render();window.scrollTo(0,0)}
+function back(){if(nav.length>1)nav.pop();ui={};render()}
+const topbar=(t,noBack)=>`<div class="top">${noBack?'':'<button class="back" onclick="back()">←</button>'}<h1>${t}</h1></div>`;
+const balls=a=>`<div class="balls">${a.map(x=>`<div class="ball">${x}</div>`).join('')}</div>`;
+const T=n=>D.tickets.find(t=>t.n===n);
+const myMail=()=>D.mail||[];
+const unread=()=>myMail().filter(m=>m.id>seenMail).length;
+
+function render(){
+  const el=document.getElementById('screen');
+  if(!D){ el.innerHTML='<div class="loading">Загружаем…</div>'; return; }
+  if(D.noSeason&&!(window.LabScreens&&LabScreens[cur().s])&&cur().s!=='team'){ el.innerHTML=`<div class="paper" style="margin-top:30px">Скоро здесь начнётся новый сезон Вышивального лото. Загляните позже!</div>${staffKey?`<button class="btn" style="width:100%" onclick="openLab()">Лаборантская</button>`:''}${teamLink()}`; return; }
+  const c=cur(); const f={home,room,ticket,report,mail,rules,history,team,...(window.LabScreens||{})}[c.s]||home;
+  el.innerHTML=f(c);
+}
+const teamLink=()=>`<div style="text-align:center;margin-top:40px"><a href="#" onclick="go('team');return false" style="color:#7d6a63;font-size:11px;text-decoration:none">Вход для команды</a></div>`;
+
+// ---------- главная ----------
+function home(){
+  const left=6-D.dow;
+  return `${D.winner?`<div class="win">Сезон завершён! Победил билет № ${D.winner.n}.</div>`:''}
+ <div class="navs"><button class="btn" onclick="go('room')">Моя комната</button><button class="btn" onclick="go('mail')">Почта${unread()?' •':''}</button><button class="btn" onclick="go('history')">История розыгрышей</button><button class="btn" onclick="go('rules')">Правила</button>${staffKey?`<button class="btn" style="background:#2b211d;border:1px solid #f0b429" onclick="openLab()">Лаборантская</button>`:''}</div>
+ <div class="row" style="justify-content:space-between;margin:18px 0 8px"><h2 style="margin:0">Доска объявлений</h2><span style="background:rgba(0,0,0,.35);border-radius:14px;padding:3px 10px;font-size:13px;color:#cdbfb4">🎱 Выпало: <b style="color:#f3ece4">${D.drawn}/90</b></span></div>
+ <div class="paper"><b>Важные объявления</b>${D.board?`<div style="margin-top:6px">${esc(D.board)}</div>`:'<div style="margin-top:6px;color:#8d7f78">Пока объявлений нет.</div>'}</div>
+ <div class="card">
+  <div class="li"><span>✨</span><span><b>Сезон:</b> ${esc(D.season.name)}</span></div>
+  <div class="li"><span>📅</span><span>${D.week?`<b>Неделя:</b> ${D.week} из 15`:`<b>Раздача билетов.</b> Старт ${fmt(dateAt(0))} в 00:00 МСК`}</span></div>
+  ${D.week?`<div class="li"><span>🎱</span><span><b>Бочонки этой недели:</b></span></div><div style="margin-left:30px">${balls(D.lastDraw)}</div>`:''}
+  <div class="li"><span>⏳</span><span>${D.week===0?`<b>До первого розыгрыша:</b> ${-D.dayIndex} д.`:`<b>До сдачи отчётов:</b> ${D.over?'—':left===0?'сегодня до 23:59':`${left} д. (до понедельника 23:59 МСК)`}`}</span></div>
+  <div class="li"><span>🧵</span><span><b>Норма:</b> ${D.season.norm} крестиков за число на каждом билете</span></div>
+  <div style="margin-top:10px"><b style="color:#f3c9c9">Внимание!</b></div>
+  <div class="li"><span>❗️</span><span>Пропущенный бочонок переходит на следующую неделю со штрафом ×2.</span></div>
+  <div class="li"><span>❌</span><span>При двойном пропуске подряд билет сгорает.</span></div>
+  <div class="li"><span>📝</span><span>На фото обязательно КС в формате «номера бочонков недели, номер билета», например: «10 11 15 27 45 88, Б17»</span></div>
+ </div>${teamLink()}`;
+}
+
+// ---------- моя комната ----------
+function tags(t){
+  const g=[];
+  if(t.fix)g.push('<span class="tag t-rej">отклонён — исправить</span>');
+  const due=t.owed.filter(x=>!t.debt.includes(x)),db=t.owed.filter(x=>t.debt.includes(x));
+  if(due.length)g.push(`<span class="tag t-due">к отшиву: ${due.length}</span>`);
+  if(db.length)g.push(`<span class="tag t-debt">долг ×2: ${db.length}</span>`);
+  if(t.pending.length)g.push(`<span class="tag t-rev">на проверке: ${t.pending.length}</span>`);
+  return g.join('');
+}
+function room(){
+  const closed=D.tickets.reduce((a,t)=>a+t.closed.length,0);
+  const tiles=D.tickets.map(t=>t.burned?`<div class="tile burned"><div class="muted">Билет № ${t.n}</div><div style="font-size:16px;font-weight:bold">Сгорел</div><div class="muted">неделя ${t.burnedWeek}</div></div>`
+   :`<div class="tile" onclick="go('ticket',{n:${t.n}})"><div class="muted">Билет № ${t.n}</div><div><div style="font-size:18px;font-weight:bold">${t.closed.length} из 15</div><div class="muted">${Math.round(t.closed.length/15*100)}%</div></div><div>${tags(t)}</div></div>`).join('');
+  const add=D.tickets.length>=5?'':D.canActivate
+   ?`<div class="tile add"><div class="muted">Добавить билет (${D.tickets.length} из 5)</div><input type="text" id="codeInp" maxlength="6" placeholder="Код билета" style="text-transform:uppercase" oninput="document.getElementById('codeErr').textContent=''"><button class="btn small" id="addBtn" onclick="addCode()">Добавить</button><div class="err" id="codeErr"></div></div>`
+   :`<div class="tile add" style="border-color:#5a4540"><div class="muted">Приём кодов закрыт</div><div class="muted" style="font-size:12px">Код можно было ввести до ${fmt(dateAt(0))}, 23:59.</div></div>`;
+  return `${topbar('Моя комната')}
+ <div class="head"><div><div class="k">Вышито крестиков за сезон</div><div class="v">${D.totals.mine.toLocaleString('ru')}</div><div class="k">Закрыто чисел</div><div class="v">${closed}</div></div>
+ <button class="mail" onclick="go('mail')" aria-label="Почта">✉${unread()?`<span class="badge">${unread()}</span>`:''}</button></div>
+ <div class="muted">Ход сезона: выпало ${D.drawn} из 90 бочонков</div><div class="bar"><i style="width:${D.drawn/90*100}%"></i></div>
+ <h2>Мои билеты</h2><div class="tiles">${tiles}${add}</div>
+ ${!D.tickets.length&&D.canActivate?'<p class="muted" style="margin-top:12px">Введите код билета, который вам прислал организатор.</p>':''}`;
+}
+async function addCode(){
+  const inp=document.getElementById('codeInp'),e=document.getElementById('codeErr'),v=inp.value.trim().toUpperCase();
+  if(!v){e.textContent='Введите код';return}
+  if(busy)return; busy=true; document.getElementById('addBtn').disabled=true;
+  try{ await api('activate',{code:v,codes}); codes.push(v); await saveStore(); await refresh(); render(); toast('Билет добавлен'); }
+  catch(x){ e.textContent=x.message; document.getElementById('addBtn').disabled=false; }
+  busy=false;
+}
+
+// ---------- билет ----------
+function ticket(p){
+  const t=T(p.n); if(!t){nav=[{s:'home'}];return home()}
+  const cells=t.grid.flat().map(x=>{if(x===null)return'<div class="c e"></div>';let cl='';if(t.closed.includes(x))cl='x';else if(t.pending.includes(x))cl='r';else if(t.owed.includes(x))cl=t.debt.includes(x)?'debt':'d';return`<div class="c ${cl}">${x}</div>`}).join('');
+  const hist=((D.hist||{})[t.n]||[]).concat(D.reports.filter(r=>r.t===t.n)).sort((a,b)=>b.id-a.id);
+  return `${topbar('Билет № '+t.n)}
+ <div class="card"><div class="muted">Сезон ${esc(D.season.name)} · всего ${(15*D.season.norm).toLocaleString('ru')} крестиков (15 × ${D.season.norm})</div>
+ <div style="margin-top:4px"><b>Закрыто ${t.closed.length} из 15</b> · нужно сдать до понедельника: <b>${t.due}</b> крестиков</div></div>
+ <div class="grid">${cells}</div>
+ <div class="legend"><span><i style="background:#f6d58b"></i>к отшиву</span><span><i style="background:#f5b7b1"></i>долг ×2</span><span><i style="background:#bcd6f2"></i>на проверке</span><span><i style="background:#3f9b4a"></i>закрыто</span></div>
+ ${t.fix?`<div class="card" style="border:1px solid #c0392b;margin-top:10px"><b>Отчёт отклонён.</b> Причина: ${esc(t.fix.reason)}<br><span class="muted">Исправьте до понедельника 23:59. Пока не отправите исправление, новый отчёт по билету сдать нельзя.</span></div>`:''}
+ <div style="margin-top:12px"><button class="btn green" style="width:100%" ${t.canReport?'':'disabled'} onclick="go('report',{n:${t.n}})">${t.fix?'Исправить отчёт':'Добавить отчёт'}</button><div class="muted" style="margin-top:6px">${esc(t.why)}</div></div>
+ <h2>Прогресс</h2>
+ ${hist.length?hist.map(r=>`<div class="hist"><div style="flex:1;font-size:13px"><div style="color:#8fc1ff">Неделя ${r.week}, ${DS[r.dow]}${r.isFix?' · исправление':''}</div><div>Числа: ${r.nums.join(', ')}</div><div>Вышито: ${r.stitched}</div>${r.comment?`<div class="muted">Комментарий: ${esc(r.comment)}</div>`:''}</div>
+ <span style="font-size:20px">${r.status==='accepted'?'<span style="color:#3f9b4a">✓</span>':r.status==='rejected'?'<span style="color:#e57373">✕</span>':'<span style="color:#8fc1ff">⏳</span>'}</span></div>`).join(''):'<div class="muted">Отчётов пока нет.</div>'}`;
+}
+
+// ---------- отчёт ----------
+function report(p){
+  const t=T(p.n); if(!t){nav=[{s:'home'}];return home()}
+  const isFix=!!t.fix, list=isFix?t.fix.nums:t.owed;
+  if(!ui.sel)ui.sel=new Set(isFix?list:[]);
+  const cost=x=>(t.debt.includes(x)?2:1)*D.season.norm;
+  const norm=[...ui.sel].reduce((a,x)=>a+cost(x),0);
+  const ks=`${D.lastDraw.join(' ')}, Б${t.n}`;
+  return `${topbar(isFix?'Исправление отчёта':'Дневник отчёта')}
+ <div class="card">Билет № ${t.n}</div>
+ <h2>Числа, которые вы отшили</h2>
+ ${list.map(x=>`<label class="chk"><input type="checkbox" ${ui.sel.has(x)?'checked':''} ${isFix?'disabled':''} onchange="toggleSel(${x});document.getElementById('repErr').textContent=''"> <b>${x}</b> <span class="muted">${t.debt.includes(x)?`долг ×2 — ${cost(x)} крестиков`:`${cost(x)} крестиков`}</span></label>`).join('')}
+ <div class="card"><b>Норма: ${norm} крестиков</b></div>
+ <h2>Этап 1. Начало работы</h2>
+ <div class="muted">Фото «Было». В кадре КС: «${ks}».</div>
+ <div class="row" style="margin-top:6px">${ui.beforeUrl?`<img class="photo" src="${ui.beforeUrl}">`:''}<label class="btn small gray">${ui.beforeUrl?'Заменить':'Загрузить'}<input type="file" accept="image/*" hidden onchange="loadPhoto(this,'before')"></label></div>
+ <h2>Этап 2. Завершение</h2>
+ <div class="muted">Фото «Стало» с тем же КС: «${ks}».</div>
+ <div class="row" style="margin-top:6px">${ui.afterUrl?`<img class="photo" src="${ui.afterUrl}">`:''}<label class="btn small gray">${ui.afterUrl?'Заменить':'Загрузить'}<input type="file" accept="image/*" hidden onchange="loadPhoto(this,'after')"></label></div>
+ <div style="margin-top:12px"><div class="muted">Вышито крестиков</div><input type="number" inputmode="numeric" id="st" value="${ui.st??''}" oninput="ui.st=this.value;document.getElementById('repErr').textContent=''"></div>
+ <div class="err" id="repErr"></div>
+ <button class="btn" id="sendBtn" style="width:100%;margin-top:6px" onclick="submitReport(${t.n})">Отправить на проверку</button>`;
+}
+function toggleSel(x){ui.sel.has(x)?ui.sel.delete(x):ui.sel.add(x);render()}
+// Сжимаем фото до 1280 px — чтобы быстро грузилось и не вешало слабые телефоны
+function loadPhoto(inp,k){
+  const f=inp.files[0]; if(!f)return; const url=URL.createObjectURL(f); const img=new Image();
+  img.onload=()=>{const M=1280,sc=Math.min(1,M/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    c.toBlob(b=>{ui[k]=b; if(ui[k+'Url'])URL.revokeObjectURL(ui[k+'Url']); ui[k+'Url']=URL.createObjectURL(b); render();},'image/jpeg',0.8);};
+  img.onerror=()=>{URL.revokeObjectURL(url);toast('Не получилось открыть фото')}; img.src=url;
+}
+async function submitReport(n){
+  const t=T(n),e=document.getElementById('repErr'),btn=document.getElementById('sendBtn');
+  const st=parseInt(ui.st)||0, cost=x=>(t.debt.includes(x)?2:1)*D.season.norm, norm=[...ui.sel].reduce((a,x)=>a+cost(x),0);
+  if(!ui.sel.size){e.textContent='Отметьте хотя бы одно число';return}
+  if(!ui.before||!ui.after){e.textContent='Добавьте оба фото: «Было» и «Стало»';return}
+  if(st<norm){e.textContent=`Вышито ${st} — меньше нормы ${norm}. Отметьте меньше чисел или довышейте`;return}
+  if(busy)return; busy=true; btn.disabled=true;
+  try{
+    const keys={};
+    for(const k of ['before','after']){
+      btn.textContent=k==='before'?'Загружаем фото «Было»…':'Загружаем фото «Стало»…';
+      const u=await api('uploadUrl',{code:t.code,kind:k});
+      const r=await fetch(u.url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:ui[k]});
+      if(!r.ok)throw new Error('Фото не загрузилось. Проверьте интернет и попробуйте ещё раз');
+      keys[k]=u.key;
+    }
+    btn.textContent='Отправляем…';
+    await api('submit',{code:t.code,nums:[...ui.sel],stitched:st,photos:keys});
+    await refresh(); nav.pop(); ui={}; render(); toast('Отчёт отправлен на проверку');
+  }catch(x){ e.textContent=x.message; btn.disabled=false; btn.textContent='Отправить на проверку'; }
+  busy=false;
+}
+
+// ---------- почта, история ----------
+function mail(){
+  const mm=myMail().slice().reverse();
+  const html=`${topbar('Почта')}${mm.length?mm.map(m=>`<div class="card" style="${m.id>seenMail?'border:1px solid #f0b429':''}"><div class="muted">${new Date(m.at).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',timeZone:'Europe/Moscow'})}</div>${esc(m.text)}</div>`).join(''):'<div class="muted">Писем пока нет.</div>'}`;
+  const mx=Math.max(seenMail,...myMail().map(m=>m.id)); if(mx>seenMail){seenMail=mx;saveStore();}
+  return html;
+}
+function history(){
+  const cell=(l,v)=>`<div style="background:rgba(0,0,0,.3);border-radius:8px;padding:2px 8px;font-size:12px;color:#cdbfb4;min-width:92px;display:flex;justify-content:space-between;gap:6px">${l}<b style="font-size:13px;color:#f3ece4">${v.toLocaleString('ru')}</b></div>`;
+  return `${topbar('История розыгрышей')}
+ <div class="stats"><div class="stat"><span>Вышито всеми</span><b>${D.totals.all.toLocaleString('ru')}</b></div><div class="stat"><span>Вышито вами</span><b>${D.totals.mine.toLocaleString('ru')}</b></div></div>
+ ${D.draws.slice().reverse().map(d=>`<div class="card" style="padding:10px 12px"><b>Неделя ${d.week}</b><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><div style="flex:1;min-width:0">${balls(d.balls)}</div><div style="display:flex;flex-direction:column;gap:4px">${cell('Все',d.all)}${cell('Вы',d.mine)}</div></div></div>`).join('')||'<div class="muted">Розыгрышей ещё не было.</div>'}
+ ${D.draws.length?'<div class="muted">Крестики засчитываются в ту неделю, за которую сдан отчёт, после его приёма.</div>':''}`;
+}
+function rules(){
+ const N=D.season.norm,N2=N*2,f=d=>fmt(dateAt(d));
+ const sec=[
+ ['Тезисы Правил',`<p><i>Краткое содержание не заменяет полный текст. Каждая участница читает Правила целиком.</i></p><ul>
+  <li>Вышивальное лото — сезонная игра. Сезон длится около трёх месяцев, до первой победы.</li>
+  <li>Билеты бесплатные, их выдаёт организатор: от 1 до 5 в одни руки. Всего в первом сезоне 100 билетов.</li>
+  <li>Код билета вводится в «Моей комнате» <b>до 23:59 (МСК) дня первого розыгрыша</b> — ${f(0)}. Потом приём кодов закрывается.</li>
+  <li>Каждый вторник в 00:00 (МСК) из мешочка достают <b>6 бочонков</b>. Совпадения подсвечиваются в билетах.</li>
+  <li>Норма: <b>${N} крестиков за каждое совпавшее число на каждом билете</b>. Один отчёт — один билет.</li>
+  <li>Срок сдачи — <b>до понедельника 23:59 (МСК)</b>. В отчёте два фото, «Было» и «Стало», и на обоих — КС.</li>
+  <li>Пропущенный бочонок переходит на следующую неделю со штрафом <b>×2</b>. При двойном пропуске подряд <b>билет сгорает</b>.</li>
+  <li>Побеждает та, у кого <b>первой приняты все 15 чисел</b> одного билета. После первой победы сезон заканчивается.</li></ul>`],
+ ['Цель игры',`<p>Главная цель — вышивать в удовольствие и в хорошем ритме. Бочонки задают темп, азарт добавляет мотивации, а в конце сезона самую быструю и упорную ждёт приз.</p>`],
+ ['Сезон и расписание',`<table><tr><td>Раздача билетов и приём кодов</td><td>${f(-7)} — ${f(0)}, до 23:59</td></tr><tr><td>Первый розыгрыш</td><td>${f(0)}, 00:00</td></tr><tr><td>Розыгрыши</td><td>каждый вторник, 00:00</td></tr><tr><td>Сдача отчётов</td><td>со вторника 00:00 до понедельника 23:59</td></tr><tr><td>Последний возможный розыгрыш</td><td>15-я неделя, ${f(98)}</td></tr><tr><td>Окончание</td><td>в момент первой победы или после 15-й недели</td></tr></table>
+  <p>Всего в мешочке 90 бочонков, каждую неделю их достают по 6, поэтому за сезон проходит не больше 15 розыгрышей. По расчётам первый билет закрывается примерно на 10–12-й неделе.</p>
+  <p>Всё время в игре — <b>московское</b>. Планируйте сдачу заранее: жалобы на интернет и «не успела нажать» не принимаются.</p>`],
+ ['Билеты',`<h3>Как получить билет</h3><ul><li>Билеты бесплатные. Их выдаёт организатор лично, например в сообщениях ВКонтакте.</li><li>Одной участнице — <b>не больше 5 билетов</b>. Сгоревшие билеты тоже входят в эти пять.</li><li>В первом сезоне ровно 100 билетов. Когда они закончатся, раздача прекращается.</li></ul>
+  <h3>Билет и код</h3><p>Каждый билет — это карточка лото: 3 строки по 9 клеток, в каждой строке 5 чисел и 4 пустые клетки. Всего на билете <b>15 чисел от 1 до 90</b>. Числа случайные и закреплены за билетом до конца сезона.</p><p>У каждого билета есть номер и <b>секретный код из 6 символов</b>. Код — это ключ к билету: кто знает код, тот может сдавать по нему отчёты.</p>
+  <h3>Ввод кода</h3><ol><li>Зайдите в «Мою комнату».</li><li>В плитке «Добавить билет» введите код и нажмите «Добавить».</li><li>Если билетов несколько, введите все коды по очереди.</li></ol><figure style="margin:10px 0"><img src="img/code.jpg" loading="lazy" decoding="async" alt="Ввод кода в «Моей комнате»" style="width:300px;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">Ввод кода в «Моей комнате»</figcaption></figure><p>Код вводится один раз. Билеты привязываются к вашему профилю ВКонтакте и видны и с телефона, и с компьютера.</p><p><b>Приём кодов закрывается ${f(0)} в 23:59 (МСК).</b> Билет, код которого не введён вовремя, в игре не участвует.</p>
+  <h3>Важно</h3><ul><li>Нельзя передавать код другим людям и вводить чужие коды.</li><li>Если код потерялся или его узнал кто-то другой, сразу напишите организатору. Он выпустит новый код, а старый перестанет работать.</li></ul>`],
+ ['Розыгрыш бочонков',`<ul><li>Каждый вторник в 00:00 (МСК) приложение достаёт из мешочка 6 случайных бочонков. Выпавший бочонок обратно не возвращается.</li><li>Бочонки недели видны на главной странице, а все прошлые — в «Истории розыгрышей».</li><li>Совпадения сразу подсвечиваются в билетах. Если на билете ничего не совпало — сдавать по нему нечего, и это не пропуск.</li></ul>`],
+ ['Норма',`<p>За <b>каждое совпавшее число на каждом билете</b> нужно вышить <b>${N} крестиков</b>. Билеты считаются отдельно.</p>
+  <table><tr><td>На билете № 17 совпали 2 числа</td><td>${N*2}</td></tr><tr><td>Число 47 совпало на трёх ваших билетах</td><td>${N*3} — по ${N} в отчёт каждого билета</td></tr><tr><td>На № 17 два числа, на № 52 одно</td><td>№ 17 — ${N*2}, № 52 — ${N}</td></tr><tr><td>На билете № 23 совпадений нет</td><td>ничего</td></tr></table>
+  <ul><li>Вышить можно и больше нормы, но лишние крестики никуда не переносятся.</li><li>Вышивать можно любую свою работу.</li></ul>
+  <h3>Цвета чисел в билете</h3><figure style="margin:10px 0"><img src="img/grid.jpg" loading="lazy" decoding="async" alt="Так выглядит билет в приложении" style="width:100%;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">Так выглядит билет в приложении</figcaption></figure><ul><li><b>Белое</b> — число ещё не выпало.</li><li><b>Жёлтое</b> — выпало, нужно отшить.</li><li><b>Розовое</b> — долг ×2 с прошлой недели.</li><li><b>Голубое</b> — отчёт на проверке.</li><li><b>Зелёное с фишкой</b> — число закрыто.</li></ul><h3>Пересчёт в крестики других швов и элементов</h3><ul><li>1 крестик, мелкокрестик, бисеринка = 1 крестик</li><li>1 полукрест, четверть-крест, три-четверти-крест = 0,5 крестика</li><li>1 стежок бэкстич = 0,5 крестика</li><li>1 французский узелок = 1 крестик</li><li>1 болгарский крест = 2 крестика</li><li>1 пуговица или другой пришивной элемент = 4 крестика</li></ul>
+  <p>Бэкстич и французские узелки можно считать по Саге. <b>Декоративные швы</b> считаются по площади, занятой швом; Сага для них не подходит. <b>Блэкворк</b> — по площади: 1 клеточка = 0,5 крестика. <b>Дизайны Совиного леса</b> уже пересчитаны в крестики. <b>Дизайны других авторов</b> с декоративными швами считаются по площади, если элементы не увеличены вышивальщицей.</p>`],
+ ['Отчёт',`<h3>Когда сдавать</h3><ul><li>Со вторника 00:00 до понедельника 23:59 (МСК), в любой день.</li><li>Если по билету отклонён отчёт, новый отчёт по нему можно сдать только <b>с пятницы</b> и только после исправления.</li></ul>
+  <h3>Главное правило</h3><p><b>Один отчёт — один билет.</b> Один и тот же кусок отшива нельзя показать в отчётах разных билетов: за каждый билет нужно отшить отдельную норму.</p>
+  <h3>Фото и КС</h3><p>В каждом отчёте два фото: <b>«Было»</b> — до начала отшива, и <b>«Стало»</b> — когда норма вышита. На обоих в кадре обязательно <b>КС</b> — бумажка в формате «номера бочонков недели, номер билета», например: <b>«10 11 15 27 45 88, Б17»</b>. Отчёт без КС или с чужим КС будет отклонён.</p><figure style="margin:10px 0"><img src="img/ks.jpg" loading="lazy" decoding="async" alt="Пример: бумажка с КС лежит рядом с вышивкой и видна на фото" style="width:300px;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">Пример: бумажка с КС лежит рядом с вышивкой и видна на фото</figcaption></figure>
+  <h3>Как заполнить</h3><ol><li>Откройте билет и нажмите «Добавить отчёт».</li><li>Отметьте отшитые числа — приложение покажет норму.</li><li>Загрузите фото «Было» и «Стало» с КС.</li><li>Укажите, сколько вышито (не меньше нормы).</li><li>Нажмите «Отправить на проверку».</li></ol><p>Можно отшить только часть выпавших чисел — остальные считаются пропуском.</p><figure style="margin:10px 0"><img src="img/report.jpg" loading="lazy" decoding="async" alt="Дневник отчёта: отмечены число с долгом (400) и новое число (200)" style="width:280px;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">Дневник отчёта: отмечены число с долгом (400) и новое число (200)</figcaption></figure>`],
+ ['Проверка отчётов',`<ul><li>Проверяющие смотрят КС, фото и видно ли, что вышито заявленное количество.</li><li><b>Число закрывается только после принятия отчёта.</b></li><li>О результате приходит письмо в «Почту». К отклонённому отчёту обязательно пишется причина.</li><li>Крестики засчитываются в ту неделю, за которую сдан отчёт.</li></ul>
+  <h3>Если отчёт отклонён</h3><p>Отклонение — не пропуск. Исправьте и отправьте отчёт заново <b>до ближайшего понедельника 23:59</b>. Пока исправление не отправлено, новый отчёт по билету сдать нельзя; после — он откроется с пятницы. Не исправили — двойной пропуск, и <b>билет сгорает</b>.</p>
+  <h3>Фото после проверки</h3><p>После приёма отчёта фото удаляются. Сохраняйте свои фото сами.</p>`],
+ ['Пропуски и штрафы',`<ul><li><b>Пропуск</b> — любой выпавший бочонок, который не закрыт в текущий отчёт к понедельнику 23:59.</li><li><b>Штраф ×2.</b> На следующей неделе пропущенное число стоит <b>${N2}</b> крестиков вместо ${N}. Новые числа — по обычной норме.</li><li><b>Отработка.</b> Сданы и долг, и новые числа — билет снова чистый.</li><li><b>Сгорание.</b> Долг не отработан и неделя снова пропущена — билет сгорает.</li><li>Пропуски не подряд билет не сжигают.</li></ul><figure style="margin:10px 0"><img src="img/tiles.jpg" loading="lazy" decoding="async" alt="«Моя комната»: метки «к отшиву», «долг ×2», «на проверке» и сгоревший билет" style="width:320px;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">«Моя комната»: метки «к отшиву», «долг ×2», «на проверке» и сгоревший билет</figcaption></figure>
+  <table><tr><td>Неделя 1</td><td>Выпали 3 числа, сдано 1 → 2 числа в долг</td></tr><tr><td>Неделя 2</td><td>Выпало ещё 1 → нужно 2 × ${N2} + ${N} = <b>${N2*2+N}</b></td></tr><tr><td>Сданы все</td><td>долг закрыт</td></tr><tr><td>Долг не сдан</td><td><b>билет сгорает</b></td></tr></table>`],
+ ['Победа и окончание сезона',`<ul><li>Побеждает участница, у которой <b>первой приняты все 15 чисел</b> одного билета.</li><li>При ничьей побеждает та, что <b>раньше отправила</b> последний отчёт по билету.</li><li>После победы сезон заканчивается.</li><li>Если выпали все 90 бочонков, а закрытого билета нет, побеждает билет, ближе всего к финишу: больше всего закрытых чисел среди несгоревших; при равенстве — тот, чей последний принятый отчёт отправлен раньше.</li></ul>
+  <p><b>Призы:</b></p>${D.season.prizes.length?`<ul>${D.season.prizes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p>будут объявлены ближе к старту.</p>'}`],
+ ['Объявления и почта',`<ul><li>На главной — доска объявлений: старт сезона, новости, итоги.</li><li>В «Почту» приходят личные письма: новые бочонки, результаты проверки, пропуски, сгорание билетов.</li></ul><figure style="margin:10px 0"><img src="img/mail.jpg" loading="lazy" decoding="async" alt="Письма в «Почте»: новые выделены рамкой" style="width:300px;max-width:100%;border-radius:10px;display:block;margin:0 auto"><figcaption style="font-size:12px;color:#7d6a63;text-align:center;margin-top:4px">Письма в «Почте»: новые выделены рамкой</figcaption></figure>`],
+ ['Персональная ответственность',`<p>Каждая участница вышивает сама. Нельзя показывать чужую вышивку, отчитываться одной работой за несколько билетов или передавать код. Если обнаружится попытка ввести проверяющих в заблуждение, организатор вправе <b>снять билет с игры</b>.</p>`],
+ ['Личные данные',`<p>Приложение не собирает имена, телефоны и адреса. На сервере хранятся только номера билетов, отчёты и фото вышивки, причём фото удаляются после проверки.</p>`],
+ ['Техподдержка',`<p>Сначала обновите приложение ВКонтакте и браузер. Не помогло — отметьте в чате <b>Лену Макаркину</b> и приложите скриншот. С вопросами по правилам — тоже к Лене в чате.</p>`],
+ ['Частые вопросы',`<p><b>Сменила телефон — билеты пропали?</b> Нет, они привязаны к профилю ВКонтакте.</p><p><b>Потеряла код.</b> Если уже ввели его — билет у вас. Если нет — напишите организатору.</p><p><b>Можно вышить вперёд?</b> Нет, фото «Было» с КС делается после розыгрыша.</p><p><b>Ничего не совпало — это пропуск?</b> Нет.</p><p><b>Вышила больше нормы — лишнее пригодится?</b> Нет, запаса нет.</p><p><b>Можно билет вместо сгоревшего?</b> Нет, после старта билеты не выдаются.</p>`]];
+ return `${topbar('Правила')}<div class="paper rules"><h3 style="margin-top:0">Содержание</h3><ol>${sec.map((s,i)=>`<li><a href="#" onclick="document.getElementById('r${i}').scrollIntoView();return false">${s[0]}</a></li>`).join('')}</ol>
+ ${sec.map((s,i)=>`<h2 id="r${i}">${s[0]}</h2>${s[1]}<div style="text-align:right"><a href="#" onclick="window.scrollTo(0,0);return false" style="font-size:12px">наверх ↑</a></div>`).join('')}</div>`;
+}
+
+// ---------- вход для команды ----------
+function team(){
+  return `${topbar('Вход для команды')}<div class="card"><div class="muted" style="margin-bottom:8px">Введите ключ доступа, который вам выдал организатор.</div>
+ <input type="text" id="tkey" maxlength="20" placeholder="Ключ" style="text-transform:uppercase" oninput="document.getElementById('terr').textContent=''">
+ <div class="err" id="terr"></div><button class="btn" id="tbtn" style="width:100%" onclick="teamLogin()">Войти</button></div>`;
+}
+async function teamLogin(){
+  const v=document.getElementById('tkey').value.trim().toUpperCase(),e=document.getElementById('terr');
+  if(!v){e.textContent='Введите ключ';return}
+  try{ const r=await api('staffCheck',{key:v}); staffKey=v; await saveStore(); toast('Вы вошли как: '+r.label); nav=[{s:'home'}]; openLab(); }
+  catch(x){ e.textContent=x.message; }
+}
+function openLab(){ if(window.Lab) Lab.open(); else toast('Лаборантская появится в следующей версии'); }
+
+// ---------- запуск ----------
+async function start(){
+  try{ if(bridge) await bridge.send('VKWebAppInit'); }catch(e){}
+  await loadStore();
+  try{ await refresh(); }catch(e){ document.getElementById('screen').innerHTML=`<div class="paper" style="margin-top:30px">${esc(e.message)}</div><button class="btn" style="width:100%" onclick="location.reload()">Обновить</button>`; return; }
+  render();
+}
+document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible'&&D&&!busy&&!['report'].includes(cur().s)){ try{await refresh();render();}catch(e){} } });
+start();
+</script>
+<script src="lab.js" defer></script>
+</body>
+</html>

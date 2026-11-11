@@ -1,0 +1,6 @@
+{
+  "_comment": "Адреса ресурсов в Яндекс Облаке. Ключи доступа сюда НЕ пишем — они задаются в настройках функции.",
+  "bucket": "loto-photos-2197",
+  "docapiEndpoint": "https://docapi.serverless.yandexcloud.net/ru-central1/b1g2d2obvbkibnieas3i/etnuje1jflknenin337d",
+  "region": "ru-central1"
+}

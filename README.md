@@ -2,6 +2,6 @@
 
 Мини-приложение ВКонтакте для сезонной вышивальной игры.
 
-- `server/game.js` — логика игры (билеты, розыгрыши, отчёты, пропуски, победа).
-- `server/game.test.js` — автоматические проверки: `node server/game.test.js`.
-- `prototype.html` — кликабельный прототип экранов.
+- web/ — приложение (открывается по адресу …/vyshivalnoe-loto/web/)
+- server/ — сервер для Yandex Cloud Functions
+- prototype.html — кликабельный прототип экранов

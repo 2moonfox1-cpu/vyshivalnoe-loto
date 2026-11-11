@@ -78,7 +78,7 @@ function draw(s, now, rnd) {
   for (const t of Object.values(s.tickets)) if (t.active && !t.burned && d.some(x => nums(t).includes(x))) mail(s, t.n, `Новые бочонки! На билете № ${t.n} есть числа к отшиву.`, now);
 }
 function finishClosest(s, now) {
-  const lastAcc = n => Math.max(0, ...s.reports.filter(r => r.t === n && r.status === 'accepted').map(r => r.sentAt));
+  const lastAcc = n => s.tickets[n].lastAccAt || 0;
   const c = Object.values(s.tickets).filter(t => t.active && !t.burned)
     .sort((a, b) => (b.closed.length - a.closed.length) || (lastAcc(a.n) - lastAcc(b.n)))[0];
   s.over = true;
@@ -151,6 +151,7 @@ function review(s, key, myCodes, { id, accept, comment }, now) {
   if (accept) {
     r.status = 'accepted';
     t.closed = [...new Set([...t.closed, ...r.nums])]; t.debt = remove(t.debt, r.nums);
+    t.lastAccAt = r.sentAt;
     addStitched(s, t, r.isFix ? r.repWeek : r.week, r.stitched);
     mail(s, t.n, `Отчёт по билету № ${t.n} принят. Закрыты числа: ${r.nums.join(', ')}.` + (comment ? ` Комментарий проверяющего: ${comment}` : ''), now);
     if (t.closed.length === 15) t.finishedAt = r.sentAt;
@@ -177,4 +178,9 @@ function checkWinner(s, now) {
   mail(s, c.n, `Поздравляем! Билет № ${c.n} закрыт полностью — вы победили!`, now);
 }
 
-module.exports = { GameError, newSeason, tick, activate, submitReport, review, staffOf, needStaff, genCode, owed, matched, cost, nums, byCode, weekOf, dowOf, dayIndex, canActivate, startMs, MSK, DAY, WEEK };
+function reissueCode(s, n, rnd) {
+  const t = s.tickets[n]; if (!t) fail('NO_TICKET', 'Нет такого билета');
+  const used = new Set(Object.values(s.tickets).map(x => x.code));
+  t.code = genCode(6, used, rnd); return t.code;
+}
+module.exports = { reissueCode,  GameError, newSeason, tick, activate, submitReport, review, staffOf, needStaff, genCode, owed, matched, cost, nums, byCode, weekOf, dowOf, dayIndex, canActivate, startMs, MSK, DAY, WEEK };
