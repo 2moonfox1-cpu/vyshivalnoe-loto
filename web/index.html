@@ -116,8 +116,8 @@ const fmt=d=>d.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'
 
 // ---------- навигация ----------
 const cur=()=>nav[nav.length-1];
-function go(s,p={}){nav.push({s,...p});ui={};render();window.scrollTo(0,0)}
-function back(){if(nav.length>1)nav.pop();ui={};render()}
+function go(s,p={}){nav.push({s,...p});ui={};render();window.scrollTo(0,0);bgRefresh()}
+  function back(){if(nav.length>1)nav.pop();ui={};render();bgRefresh()} const LIVE=['home','room','ticket','mail','history']; function bgRefresh(){ if(D&&!busy&&LIVE.includes(cur().s)) refresh().then(()=>{ const a=document.activeElement; if(LIVE.includes(cur().s)&&!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))) render(); }).catch(()=>{}); }
 const topbar=(t,noBack)=>`<div class="top">${noBack?'':'<button class="back" onclick="back()">←</button>'}<h1>${t}</h1></div>`;
 const balls=a=>`<div class="balls">${a.map(x=>`<div class="ball">${x}</div>`).join('')}</div>`;
 const T=n=>D.tickets.find(t=>t.n===n);
