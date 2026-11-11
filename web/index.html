@@ -81,7 +81,7 @@ td,th{padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.1);text-align:le
 const API_URL = window.LOTO_API || '';
 // ================================================================
 const DS=['Вт','Ср','Чт','Пт','Сб','Вс','Пн'];
-const bridge=window.vkBridge||null;
+const bridge=(window.vkBridge&&/[?&]vk_app_id=/.test(location.search))?{send:(m,p)=>Promise.race([window.vkBridge.send(m,p),new Promise((_,rej)=>setTimeout(()=>rej(new Error('vk timeout')),4000))])}:null;
 let D=null, nav=[{s:'home'}], ui={}, codes=[], staffKey='', seenMail=0, busy=false;
 const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
