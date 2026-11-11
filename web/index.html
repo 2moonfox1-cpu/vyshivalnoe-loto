@@ -340,6 +340,7 @@ async function start(){
   render();
 }
 document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible'&&D&&!busy&&!['report'].includes(cur().s)){ try{await refresh();render();}catch(e){} } });
+  setInterval(async()=>{ const a=document.activeElement; if(document.visibilityState==='visible'&&D&&!busy&&['home','room','ticket','mail','history'].includes(cur().s)&&!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))){ try{await refresh();render();}catch(e){} } },60000);
 start();
 </script>
 <script src="lab.js" defer></script>
