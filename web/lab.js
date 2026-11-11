@@ -23,7 +23,7 @@ function lab(){
 
 // ---------- отчёты ----------
 function reports(){
-  const rej=L.checked.filter(r=>r.status==='rejected'), acc=L.checked.filter(r=>r.status==='accepted');
+  const last={}; for(const r of L.checked) if(!last[r.t]||r.checkedAt>last[r.t].checkedAt) last[r.t]=r; const rej=L.checked.filter(r=>r.status==='rejected'&&last[r.t]===r), acc=L.checked.filter(r=>r.status==='accepted');
   const tb=(k,l,n)=>`<button class="${tab===k?'on':''}" onclick="LabUI.tab('${k}')">${l} (${n})</button>`;
   let html=`<div class="seg" style="margin:6px 0 10px">${tb('pending','На проверке',L.pending.length)}${tb('rejected','Отклонённые',rej.length)}${tb('accepted','Принятые',acc.length)}</div>`;
   if(tab==='pending'){
